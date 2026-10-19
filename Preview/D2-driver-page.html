@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分区草图 B · 驱动安装</title>
+<style>
+  :root{
+    --paper:#f7f1e5; --paper2:#fdfaf2; --paper3:#f2ebdb;
+    --ink:#3b3227; --ink2:#6b5f50; --ink3:#9a8d7c;
+    --line:#e3d9c8; --line2:#d5c9b4;
+    --blue:#3a6b8a; --green:#4a7c59; --red:#a83232; --amber:#b8860b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:"Microsoft YaHei UI","Microsoft YaHei",sans-serif;font-size:13px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:1200px;height:800px;display:flex;flex-direction:column;overflow:hidden}
+
+  .top{height:54px;flex:0 0 54px;display:flex;align-items:center;padding:0 18px;
+       background:var(--paper2);border-bottom:1px solid var(--line)}
+  .mark{width:26px;height:26px;border-radius:7px;background:var(--ink);color:var(--paper);
+        display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-right:10px}
+  .brand{font-size:14.5px;font-weight:700;letter-spacing:.3px}
+  .brand small{font-weight:400;color:var(--ink3);font-size:11px;margin-left:7px;letter-spacing:0}
+  .identity{margin-left:auto;text-align:right;font-size:11.5px;color:var(--ink2);line-height:1.45}
+  .identity b{color:var(--ink);font-weight:600}
+  .identity .sn{font-family:Consolas,monospace;color:var(--ink3);font-size:10.5px}
+
+  .body{flex:1;display:flex;min-height:0}
+  .nav{width:176px;flex:0 0 176px;background:var(--paper2);border-right:1px solid var(--line);
+       padding:14px 0;display:flex;flex-direction:column}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;margin:1px 8px;
+            border-radius:6px;color:var(--ink2);font-size:13px}
+  .nav-item .ico{width:15px;text-align:center;font-size:12px;color:var(--ink3)}
+  .nav-item .dot{width:7px;height:7px;border-radius:50%;margin-left:auto;background:var(--line2)}
+  .nav-item .dot.ok{background:var(--green)}
+  .nav-item .dot.warn{background:var(--amber)}
+  .nav-item .dot.info{background:var(--blue)}
+  .nav-item.active{background:var(--paper3);color:var(--ink);font-weight:600;box-shadow:inset 2px 0 0 var(--blue)}
+  .nav-item.active .ico{color:var(--blue)}
+  .nav-sep{height:1px;background:var(--line);margin:12px 16px}
+  .nav-foot{margin-top:auto;padding:10px 16px;font-size:11px;color:var(--ink3);line-height:1.7}
+  .nav-foot b{color:var(--blue);font-size:15px;font-weight:700}
+
+  .main{flex:1;overflow:hidden;padding:18px 22px 0;display:flex;flex-direction:column;min-width:0}
+  .page-head{display:flex;align-items:flex-start;margin-bottom:12px}
+  .page-title{font-size:17px;font-weight:700;letter-spacing:.3px}
+  .page-sub{font-size:11.5px;color:var(--ink3);margin-top:3px}
+  .head-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{border:1px solid var(--line2);background:var(--paper2);color:var(--ink2);
+       padding:6px 13px;border-radius:6px;font-size:12px;font-family:inherit}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:600}
+  .btn.small{padding:4px 10px;font-size:11.5px}
+  .btn.tiny{padding:3px 9px;font-size:11px;border-radius:5px}
+
+  .summary{display:flex;border:1px solid var(--line);border-radius:8px;background:var(--paper2);
+           margin-bottom:12px;overflow:hidden}
+  .sum-cell{padding:9px 16px;border-right:1px solid var(--line);font-size:11.5px;color:var(--ink3)}
+  .sum-cell:last-child{border-right:0}
+  .sum-cell b{color:var(--ink);font-size:14px;font-weight:700;margin-right:4px}
+  .sum-cell b.r{color:var(--red)} .sum-cell b.g{color:var(--green)}
+  .sum-cell b.a{color:var(--amber)} .sum-cell b.b{color:var(--blue)}
+
+  /* 分组 */
+  .group{margin-bottom:9px}
+  .group-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;padding-left:2px}
+  .group-title{font-size:12px;font-weight:700;color:var(--ink2)}
+  .group-count{font-size:10.5px;color:var(--ink3);background:var(--paper3);
+               padding:1px 7px;border-radius:20px}
+  .group-note{font-size:10.5px;color:var(--ink3);margin-left:2px}
+
+  .list{border:1px solid var(--line);border-radius:7px;background:var(--paper2);overflow:hidden}
+  .item{display:flex;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line);font-size:12px}
+  .item:last-child{border-bottom:0}
+  .item .name{flex:0 0 200px;font-weight:600;color:var(--ink)}
+  .item .name small{display:block;font-weight:400;color:var(--ink3);font-size:10.5px;margin-top:1px}
+  .item .ver{flex:0 0 150px;font-family:Consolas,monospace;font-size:11.5px;color:var(--ink2)}
+  .item .ver .lbl{color:var(--ink3);font-family:"Microsoft YaHei UI";font-size:10.5px;margin-right:5px}
+  .item .ver .new{color:var(--red);font-weight:700}
+  .item .ver .same{color:var(--ink3)}
+  .item .state{flex:0 0 92px}
+  .tag{font-size:10.5px;padding:2px 8px;border-radius:20px;display:inline-block}
+  .tag.red{color:var(--red);background:rgba(168,50,50,.10)}
+  .tag.green{color:var(--green);background:rgba(74,124,89,.10)}
+  .tag.blue{color:var(--blue);background:rgba(58,107,138,.10)}
+  .tag.gray{color:var(--ink3);background:var(--paper3)}
+  .item .act{margin-left:auto;display:flex;gap:6px}
+
+  .firmware{border:1px solid rgba(184,134,11,.45);background:rgba(184,134,11,.06);
+            border-radius:7px;padding:9px 12px;display:flex;align-items:center;gap:10px}
+  .firmware .fw-title{font-size:12px;font-weight:700;color:var(--amber)}
+  .firmware .fw-body{font-size:11.5px;color:var(--ink2)}
+  .firmware .fw-body b{color:var(--red);font-family:Consolas,monospace}
+  .firmware .act{margin-left:auto}
+
+  .foot{flex:0 0 30px;margin:10px -22px 0;padding:0 22px;display:flex;align-items:center;
+        border-top:1px solid var(--line);font-size:11px;color:var(--ink3);background:var(--paper2)}
+  .foot .src{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top">
+    <div class="mark">AZ</div>
+    <div class="brand">驱动懒人安装 <small>Driver Setup · 0.2</small></div>
+    <div class="identity">
+      <b>Legion Y7000P IRX9</b><br>
+      <span class="sn">MTM 83DG0002CD · SN MP2GK4T3</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="nav">
+      <div class="nav-item"><span class="ico">◈</span>配置核对<span class="dot ok"></span></div>
+      <div class="nav-item active"><span class="ico">⬇</span>驱动安装<span class="dot warn"></span></div>
+      <div class="nav-item"><span class="ico">⚙</span>固件提示<span class="dot warn"></span></div>
+      <div class="nav-item"><span class="ico">⟲</span>备份回滚<span class="dot"></span></div>
+      <div class="nav-sep"></div>
+      <div class="nav-foot">
+        官网清单<br>
+        <b>23</b> 条驱动 · 需处理 1
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="page-head">
+        <div>
+          <div class="page-title">驱动安装</div>
+          <div class="page-sub">按序列号查联想官网清单，与本机已装版本逐条比对。安装包下载到程序目录 Downloads\。</div>
+        </div>
+        <div class="head-right">
+          <button class="btn">重新比对</button>
+          <button class="btn primary">一键处理可更新项</button>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="sum-cell"><b class="r">1</b>可更新</div>
+        <div class="sum-cell"><b class="g">9</b>已最新</div>
+        <div class="sum-cell"><b class="b">2</b>比官网新</div>
+        <div class="sum-cell"><b class="a">5</b>非本机配置</div>
+        <div class="sum-cell" style="color:var(--ink3)">另 3 项应用 · 1 项固件</div>
+      </div>
+
+      <!-- 可更新 -->
+      <div class="group">
+        <div class="group-head">
+          <span class="group-title">需要处理</span>
+          <span class="group-count">1</span>
+          <span class="group-note">固件单独一组，不参与一键处理</span>
+        </div>
+        <div class="list">
+          <div class="item">
+            <span class="name">主板芯片组<small>Chipset Driver</small></span>
+            <span class="ver"><span class="lbl">官网</span>10.1.46.5</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">10.1.46.5</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 固件 -->
+      <div class="group">
+        <div class="group-head">
+          <span class="group-title">固件</span>
+          <span class="group-count">1</span>
+          <span class="group-note">不下载、不执行，只给说明与官网链接</span>
+        </div>
+        <div class="firmware">
+          <span class="fw-title">BIOS</span>
+          <span class="fw-body">本机 <b>NMCN34WW</b> → 官网 <b>NMCN35WW</b> · 刷写失败会使机器无法开机</span>
+          <span class="act"><button class="btn small">查看说明</button></span>
+        </div>
+      </div>
+
+      <!-- 已最新 -->
+      <div class="group">
+        <div class="group-head">
+          <span class="group-title">已是最新</span>
+          <span class="group-count">9</span>
+        </div>
+        <div class="list">
+          <div class="item">
+            <span class="name">独立显卡<small>NVIDIA Graphics</small></span>
+            <span class="ver"><span class="lbl">官网</span>32.0.15.6624</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">32.0.15.6624</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+          <div class="item">
+            <span class="name">声卡<small>Audio Driver</small></span>
+            <span class="ver"><span class="lbl">官网</span>6.0.9679.1</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">6.0.9679.1</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+          <div class="item">
+            <span class="name">有线网卡<small>Ethernet</small></span>
+            <span class="ver"><span class="lbl">官网</span>1168.20.729.2024</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">1168.20.729.2024</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+          <div class="item">
+            <span class="name">无线网卡<small>WLAN</small></span>
+            <span class="ver"><span class="lbl">官网</span>6001.16.126.323</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">6001.16.126.323</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+          <div class="item">
+            <span class="name">管理引擎<small>MEI</small></span>
+            <span class="ver"><span class="lbl">官网</span>2433.6.3.0</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">2433.6.3.0</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+          <div class="item">
+            <span class="name">串行 IO<small>SIO</small></span>
+            <span class="ver"><span class="lbl">官网</span>30.100.2417.30</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">30.100.2417.30</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+          <div class="item">
+            <span class="name">动态调频<small>DPTF</small></span>
+            <span class="ver"><span class="lbl">官网</span>2.2.10000.20</span>
+            <span class="ver"><span class="lbl">本机</span><span class="same">2.2.10000.20</span></span>
+            <span class="state"><span class="tag green">已最新</span></span>
+            <span class="act"><button class="btn tiny">重装</button></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 比官网新 -->
+      <div class="group">
+        <div class="group-head">
+          <span class="group-title">比官网新</span>
+          <span class="group-count">2</span>
+          <span class="group-note">本机版本已领先官网，装官网包等于降级，别装</span>
+        </div>
+        <div class="list">
+          <div class="item">
+            <span class="name">电源管理<small>Energy Management</small></span>
+            <span class="ver"><span class="lbl">官网</span>15.11.29.70</span>
+            <span class="ver"><span class="lbl">本机</span><span class="new">15.11.30.14</span></span>
+            <span class="state"><span class="tag blue">比官网新</span></span>
+            <span class="act"><button class="btn tiny">下载官网</button></span>
+          </div>
+          <div class="item">
+            <span class="name">Fn 快捷键<small>Lenovo Fn Keys</small></span>
+            <span class="ver"><span class="lbl">官网</span>2.0.12.1719</span>
+            <span class="ver"><span class="lbl">本机</span><span class="new">2.1.2602.8</span></span>
+            <span class="state"><span class="tag blue">比官网新</span></span>
+            <span class="act"><button class="btn tiny">下载官网</button></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 非本机配置（折叠） -->
+      <div class="group">
+        <div class="group-head">
+          <span class="group-title">▸ 非本机配置</span>
+          <span class="group-count">5</span>
+          <span class="group-note">同型号其它配置的驱动，硬件 ID 对不上本机</span>
+        </div>
+      </div>
+
+      <div class="foot">
+        <span>数据来源：联想官网 API（序列号查询）· 本机版本读自设备管理器索引</span>
+        <span class="src">清单 23 条 · 比对耗时 2.1 s</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

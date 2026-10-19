@@ -1,0 +1,25 @@
+# ── 构建产物 ──
+Src/bin/
+Src/obj/
+App/*.exe
+App/*.dll
+App/*.pdb
+
+# ── 运行时状态（本机数据，不该进仓库）──
+App/install-history.json
+App/keyboard-layout.txt
+App/debug.log
+App/*.log
+App/Downloads/
+App/Backup/
+
+# ── VS 缓存 ──
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# ── 系统垃圾 ──
+Thumbs.db
+desktop.ini
+.DS_Store

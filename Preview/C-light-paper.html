@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>预览 C · 浅色纸本</title>
+<style>
+  :root{
+    --paper:#f7f1e5; --paper2:#fdfaf2; --ink:#3b3227; --ink2:#6b5f50; --ink3:#9a8d7c;
+    --line:#e3d9c8; --green:#3f7d4f; --orange:#b5761f; --red:#a83232; --blue:#3a6b8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font-family:"Microsoft YaHei UI","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .app{width:1000px;margin:0 auto}
+  .topbar{display:flex;align-items:center;gap:14px;padding:18px 24px 15px;border-bottom:1px solid var(--line)}
+  .brand{font-size:11px;letter-spacing:.24em;color:var(--blue);font-weight:700}
+  .title{font-size:25px;font-weight:700;margin-top:3px;letter-spacing:.02em}
+  .sub{font-size:12px;color:var(--ink3);margin-top:3px}
+  .grow{flex:1}
+  .path{background:var(--paper2);border:1px solid var(--line);border-radius:7px;
+        padding:6px 11px;font-size:12px;color:var(--ink3)}
+  .path b{color:var(--ink);font-weight:600}
+  .btn{border:0;border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer}
+  .btn-ghost{background:var(--paper2);color:var(--ink);border:1px solid var(--line)}
+  .btn-main{background:var(--ink);color:var(--paper)}
+
+  .main{display:grid;grid-template-columns:1fr 292px;gap:18px;padding:18px 24px}
+  .group{margin-bottom:16px}
+  .group-h{display:flex;align-items:baseline;gap:8px;margin:0 0 7px 2px;
+           padding-bottom:5px;border-bottom:1px dashed var(--line)}
+  .group-h .k{font-size:11px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+  .group-h .n{font-size:11px;color:var(--ink3)}
+  .row{display:flex;align-items:center;gap:11px;background:var(--paper2);border:1px solid var(--line);
+       border-radius:8px;padding:10px 13px;margin-bottom:6px;position:relative}
+  .row .bar{width:3px;align-self:stretch;border-radius:2px;margin:-10px 0 -10px 0}
+  .bar.ok{background:var(--green)} .bar.miss{background:#d3c8b6}
+  .bar.na{background:var(--orange)} .bar.hi{background:var(--red)}
+  .row.high{background:#fbf1ee;border-color:#e8cfc8}
+  .nm{font-size:13px;font-weight:600}
+  .meta{font-size:11px;color:var(--ink3)}
+  .tag{font-size:10px;border-radius:4px;padding:1px 6px;border:1px solid var(--line);color:var(--ink2)}
+  .tag.g{color:#2f6b3e;border-color:#c9ddcc;background:#eef5ef}
+  .tag.r{color:#96302f;border-color:#e6c8c6;background:#fbedec}
+  .tag.o{color:#8a5a12;border-color:#e8d6b4;background:#faf3e4}
+  .spacer{flex:1}
+  .ver{font-family:Consolas,monospace;font-size:11px;color:var(--ink3)}
+  .ver b{color:var(--ink2);font-weight:600}
+  .chk{width:14px;height:14px;border-radius:3px;border:1.5px solid #c9bda8;background:#fff;flex:0 0 auto}
+  .chk.on{background:var(--ink);border-color:var(--ink);position:relative}
+  .chk.on::after{content:"✓";position:absolute;left:1px;top:-3px;font-size:11px;color:var(--paper);font-weight:800}
+  .chk.off{border-style:dashed;opacity:.4}
+
+  .side{display:flex;flex-direction:column;gap:12px}
+  .panel{background:var(--paper2);border:1px solid var(--line);border-radius:9px;padding:13px 15px}
+  .panel h3{margin:0 0 9px;font-size:11px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+  .stat{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;color:var(--ink2);
+        border-bottom:1px dotted var(--line)}
+  .stat:last-of-type{border-bottom:0}
+  .stat b{color:var(--ink);font-size:15px}
+  .install{width:100%;padding:10px;margin-top:9px}
+  .hint{font-size:10.5px;color:var(--ink3);line-height:1.75;margin-top:8px}
+  .log{font-family:Consolas,monospace;font-size:10.5px;color:var(--ink3);line-height:1.75}
+  .log i{color:var(--blue);font-style:normal}
+  .foot{display:flex;gap:15px;padding:9px 24px;border-top:1px solid var(--line);
+        font-size:11px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="brand">DRIVER CENTER</div>
+      <div class="title">驱动管理</div>
+      <div class="sub">Legion Y7000P IRX9 · 20 个离线安装包 · 1.8 GB</div>
+    </div>
+    <div class="grow"></div>
+    <div class="path">仓库 <b>D:\Driver</b></div>
+    <button class="btn btn-ghost">重新检测</button>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="group">
+        <div class="group-h"><span class="k">GPU</span><span class="n">2 个</span></div>
+        <div class="row"><span class="bar ok"></span>
+          <span class="nm">NVIDIA 显卡驱动</span><span class="tag g">已装</span>
+          <span class="meta">801.1 MB</span><span class="spacer"></span>
+          <span class="ver">本机 <b>32.0.15.6624</b></span><span class="chk"></span></div>
+        <div class="row"><span class="bar miss"></span>
+          <span class="nm">Intel 核显驱动</span><span class="tag">未检测到</span>
+          <span class="meta">532.4 MB</span><span class="spacer"></span>
+          <span class="ver">独显直连时核显被禁用</span><span class="chk on"></span></div>
+      </div>
+
+      <div class="group">
+        <div class="group-h"><span class="k">CHIPSET</span><span class="n">3 个</span></div>
+        <div class="row"><span class="bar ok"></span>
+          <span class="nm">芯片组驱动</span><span class="tag g">已装</span>
+          <span class="meta">1.0 MB</span><span class="spacer"></span>
+          <span class="ver">本机 <b>10.1.46.5</b></span><span class="chk"></span></div>
+        <div class="row"><span class="bar ok"></span>
+          <span class="nm">Intel MEI 驱动</span><span class="tag g">已装</span>
+          <span class="meta">12.7 MB</span><span class="spacer"></span>
+          <span class="ver">本机 <b>2433.6.3.0</b></span><span class="chk"></span></div>
+        <div class="row"><span class="bar ok"></span>
+          <span class="nm">Intel Serial IO</span><span class="tag g">已装</span>
+          <span class="meta">1.1 MB</span><span class="spacer"></span>
+          <span class="ver">本机 <b>30.100.2417.30</b></span><span class="chk"></span></div>
+      </div>
+
+      <div class="group">
+        <div class="group-h"><span class="k">FIRMWARE</span><span class="n">2 个 · 永不自动勾选</span></div>
+        <div class="row high"><span class="bar hi"></span>
+          <span class="nm">BIOS 固件更新</span><span class="tag r">高危</span>
+          <span class="meta">12.9 MB</span><span class="spacer"></span>
+          <span class="ver">断电即变砖 · 仅手动</span><span class="chk off"></span></div>
+        <div class="row high"><span class="bar hi"></span>
+          <span class="nm">Intel ME 固件更新</span><span class="tag r">高危</span>
+          <span class="meta">3.3 MB</span><span class="spacer"></span>
+          <span class="ver">仅手动</span><span class="chk off"></span></div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h3>本机状态</h3>
+        <div class="stat"><span>已装</span><b>11</b></div>
+        <div class="stat"><span>未检测到</span><b>7</b></div>
+        <div class="stat"><span>未安装</span><b>2</b></div>
+        <div class="stat"><span>高危固件</span><b>2</b></div>
+        <button class="btn btn-main install">安装选中项（2）</button>
+        <div class="hint">高危项不会自动勾选。安装前请接电源。</div>
+      </div>
+      <div class="panel">
+        <h3>运行日志</h3>
+        <div class="log">
+          <i>·</i> 扫描 D:\Driver<br>
+          <i>·</i> 清单 20 条 · 设备 128 项<br>
+          <i>·</i> 芯片组 ← 10.1.46.5<br>
+          <i>·</i> MEI ← 2433.6.3.0<br>
+          <i>·</i> 完成 · 1.2s
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>20 个包 · 1.8 GB</span><span>Win11</span><span style="color:var(--blue)">只读检测模式</span></div>
+</div>
+</body>
+</html>

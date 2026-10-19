@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>预览 B · 深色表格</title>
+<style>
+  :root{
+    --bg:#0b1017; --card:#151c29; --line:#243044;
+    --fg:#e8eef8; --dim:#8b9ab2; --dim2:#5f6d84;
+    --cyan:#4dd0e1; --green:#2ecc71; --orange:#f39c12; --red:#e5484d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font-family:"Microsoft YaHei UI","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .app{width:1000px;margin:0 auto}
+  .topbar{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line)}
+  .brand{font-size:11px;letter-spacing:.22em;color:var(--cyan);font-weight:700}
+  .title{font-size:23px;font-weight:700;margin-top:2px}
+  .sub{font-size:11.5px;color:var(--dim);margin-top:2px}
+  .grow{flex:1}
+  .path{background:var(--card);border:1px solid var(--line);border-radius:8px;
+        padding:7px 12px;font-size:12px;color:var(--dim)}
+  .path b{color:var(--fg);font-weight:500}
+  .btn{border:0;border-radius:8px;padding:8px 15px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer}
+  .btn-ghost{background:#1b2434;color:var(--fg);border:1px solid var(--line)}
+  .btn-main{background:var(--cyan);color:#06222a}
+
+  .main{display:grid;grid-template-columns:1fr 272px;gap:14px;padding:14px 22px}
+  .tablewrap{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{font-size:10.5px;letter-spacing:.14em;color:var(--dim2);text-align:left;font-weight:700;
+           padding:11px 12px;border-bottom:1px solid var(--line);background:#121926}
+  tbody td{padding:8px 12px;border-bottom:1px solid #1c2536;color:var(--dim);white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr.dim{opacity:.55}
+  tbody tr.high{background:#1c1419}
+  .nm{color:var(--fg);font-weight:600}
+  .nm small{display:block;color:var(--dim2);font-weight:400;font-size:10.5px;margin-top:1px}
+  .cat{font-size:10px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--dim)}
+  .v{font-family:Consolas,monospace;font-size:11.5px;color:#bcd0ea}
+  .st{font-size:11px;font-weight:600}
+  .st.ok{color:#7ee2a8}.st.miss{color:#6b7a92}.st.na{color:#ffcb7a}.st.hi{color:#ff9aa0}
+  .chk{width:14px;height:14px;border-radius:4px;border:1px solid #3a4763;background:#0e141d;display:inline-block;vertical-align:middle}
+  .chk.on{background:var(--cyan);border-color:var(--cyan);position:relative}
+  .chk.on::after{content:"✓";position:absolute;left:1px;top:-3px;font-size:11px;color:#06222a;font-weight:800}
+  .chk.off{border-style:dashed;opacity:.3}
+
+  .side{display:flex;flex-direction:column;gap:11px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .panel h3{margin:0 0 9px;font-size:11px;letter-spacing:.16em;color:var(--dim);font-weight:700}
+  .stat{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;color:var(--dim)}
+  .stat b{color:var(--fg);font-size:16px}
+  .install{width:100%;padding:10px;margin-top:8px}
+  .hint{font-size:10.5px;color:var(--dim2);line-height:1.65;margin-top:8px}
+  .log{font-family:Consolas,monospace;font-size:10.5px;color:var(--dim);line-height:1.7}
+  .log i{color:var(--cyan);font-style:normal}
+  .foot{display:flex;gap:14px;padding:8px 22px;border-top:1px solid var(--line);font-size:11px;color:var(--dim2)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="brand">DRIVER CENTER</div>
+      <div class="title">驱动管理</div>
+      <div class="sub">Legion Y7000P IRX9 · 20 个离线安装包</div>
+    </div>
+    <div class="grow"></div>
+    <div class="path">仓库 <b>D:\Driver</b></div>
+    <button class="btn btn-ghost">重新检测</button>
+  </div>
+
+  <div class="main">
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th style="width:34px"></th><th>驱动</th><th style="width:86px">类别</th>
+              <th style="width:96px">大小</th><th style="width:150px">本机版本</th><th style="width:88px">状态</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="chk"></span></td>
+              <td><span class="nm">NVIDIA 显卡驱动<small>NVVGA-TYY5057F3M0H9RF0</small></span></td>
+              <td><span class="cat">Gpu</span></td><td>801.1 MB</td>
+              <td><span class="v">32.0.15.6624</span></td><td><span class="st ok">已装</span></td></tr>
+
+          <tr><td><span class="chk on"></span></td>
+              <td><span class="nm">Intel 核显驱动<small>独显直连时核显被禁用</small></span></td>
+              <td><span class="cat">Gpu</span></td><td>532.4 MB</td>
+              <td><span class="v">—</span></td><td><span class="st miss">未检测到</span></td></tr>
+
+          <tr><td><span class="chk"></span></td>
+              <td><span class="nm">芯片组驱动</span></td>
+              <td><span class="cat">Chipset</span></td><td>1.0 MB</td>
+              <td><span class="v">10.1.46.5</span></td><td><span class="st ok">已装</span></td></tr>
+
+          <tr><td><span class="chk"></span></td>
+              <td><span class="nm">Intel MEI 驱动</span></td>
+              <td><span class="cat">Chipset</span></td><td>12.7 MB</td>
+              <td><span class="v">2433.6.3.0</span></td><td><span class="st ok">已装</span></td></tr>
+
+          <tr><td><span class="chk"></span></td>
+              <td><span class="nm">Intel Serial IO</span></td>
+              <td><span class="cat">Chipset</span></td><td>1.1 MB</td>
+              <td><span class="v">30.100.2417.30</span></td><td><span class="st ok">已装</span></td></tr>
+
+          <tr><td><span class="chk"></span></td>
+              <td><span class="nm">声卡驱动</span></td>
+              <td><span class="cat">Audio</span></td><td>207.8 MB</td>
+              <td><span class="v">6.0.9679.1</span></td><td><span class="st ok">已装</span></td></tr>
+
+          <tr><td><span class="chk"></span></td>
+              <td><span class="nm">有线网卡驱动</span></td>
+              <td><span class="cat">Network</span></td><td>1.2 MB</td>
+              <td><span class="v">1168.20.729.2024</span></td><td><span class="st ok">已装</span></td></tr>
+
+          <tr><td><span class="chk"></span></td>
+              <td><span class="nm">Realtek 无线网卡</span></td>
+              <td><span class="cat">Network</span></td><td>4.5 MB</td>
+              <td><span class="v">6001.16.126.323</span></td><td><span class="st ok">已装</span></td></tr>
+
+          <tr class="dim"><td><span class="chk"></span></td>
+              <td><span class="nm">Intel 蓝牙驱动<small>本机为 Realtek 蓝牙，此包不适用</small></span></td>
+              <td><span class="cat">Network</span></td><td>5.1 MB</td>
+              <td><span class="v">—</span></td><td><span class="st miss">未检测到</span></td></tr>
+
+          <tr><td><span class="chk on"></span></td>
+              <td><span class="nm">X-Rite Color Assistant</span></td>
+              <td><span class="cat">Display</span></td><td>34.4 MB</td>
+              <td><span class="v">—</span></td><td><span class="st na">未安装</span></td></tr>
+
+          <tr class="high"><td><span class="chk off"></span></td>
+              <td><span class="nm">BIOS 固件更新<small>刷写主板固件 · 断电即变砖</small></span></td>
+              <td><span class="cat">Firmware</span></td><td>12.9 MB</td>
+              <td><span class="v">—</span></td><td><span class="st hi">高危</span></td></tr>
+
+          <tr class="high"><td><span class="chk off"></span></td>
+              <td><span class="nm">Intel ME 固件更新<small>仅手动 · 永不自动执行</small></span></td>
+              <td><span class="cat">Firmware</span></td><td>3.3 MB</td>
+              <td><span class="v">—</span></td><td><span class="st hi">高危</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h3>本机状态</h3>
+        <div class="stat"><span>已装</span><b>11</b></div>
+        <div class="stat"><span>未检测到</span><b>7</b></div>
+        <div class="stat"><span>未安装</span><b>2</b></div>
+        <div class="stat"><span>高危固件</span><b>2</b></div>
+        <button class="btn btn-main install">安装选中项（2）</button>
+        <div class="hint">高危项默认不勾选，且无法被「全选」带入。</div>
+      </div>
+      <div class="panel">
+        <h3>运行日志</h3>
+        <div class="log">
+          <i>·</i> 扫描 D:\Driver<br>
+          <i>·</i> 清单 20 条 · 设备 128 项<br>
+          <i>·</i> 芯片组 ← 10.1.46.5<br>
+          <i>·</i> MEI ← 2433.6.3.0<br>
+          <i>·</i> 完成 · 1.2s
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>20 个包 · 1.8 GB</span><span>Win11 26100</span><span style="color:var(--cyan)">只读检测模式</span></div>
+</div>
+</body>
+</html>

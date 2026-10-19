@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>C3 · 官网对比视图（纸本）</title>
+<style>
+  :root{
+    --paper:#f7f1e5; --paper2:#fdfaf2; --ink:#3b3227; --ink2:#6b5f50; --ink3:#9a8d7c;
+    --line:#e3d9c8; --green:#3f7d4f; --orange:#b5761f; --red:#a83232; --blue:#3a6b8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font-family:"Microsoft YaHei UI","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .app{width:1150px;margin:0 auto}
+
+  .topbar{display:flex;align-items:flex-start;gap:12px;padding:17px 22px 13px;border-bottom:1px solid var(--line)}
+  .brand{font-size:10px;letter-spacing:.24em;color:var(--blue);font-weight:700}
+  .title{font-size:23px;font-weight:700;margin-top:3px;letter-spacing:.02em}
+  .sub{font-size:11px;color:var(--ink3);margin-top:4px}
+  .grow{flex:1}
+  .machine{background:var(--paper2);border:1px solid var(--line);border-radius:7px;padding:7px 11px;
+           font-size:10.5px;color:var(--ink3);line-height:1.55}
+  .machine b{color:var(--ink);font-weight:600}
+  .btn{border:0;border-radius:7px;padding:7px 13px;font-size:12px;font-weight:600;
+       font-family:inherit;cursor:pointer;white-space:nowrap}
+  .btn-ghost{background:var(--paper2);color:var(--ink);border:1px solid var(--line)}
+  .btn-sm{background:transparent;color:var(--ink2);border:1px solid var(--line);padding:4px 9px;
+          font-size:10.5px;border-radius:6px;white-space:nowrap;cursor:pointer}
+  .btn-sm:hover{background:#efe6d5}
+  .btn-sm.hot{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  .main{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:16px;padding:13px 22px 8px}
+  .main > div:first-child{min-width:0}
+
+  .sec{display:flex;align-items:baseline;gap:8px;margin:0 0 7px 2px}
+  .sec .k{font-size:10px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+  .sec .n{font-size:10px;color:var(--ink3)}
+
+  .row{display:flex;align-items:center;gap:9px;background:var(--paper2);border:1px solid var(--line);
+       border-radius:8px;padding:8px 11px;margin-bottom:5px;position:relative;overflow:hidden}
+  .row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .row.up::before{background:var(--red)}
+  .row.newer::before{background:var(--blue)}
+  .row.ok::before{background:var(--green)}
+  .row.none::before{background:#d3c8b6}
+  .row.ask::before{background:var(--orange)}
+  .row.fw::before{background:#8c3a3a}
+  .row.hot{background:#fbf1ee;border-color:#e8cfc8}
+
+  .nm{min-width:236px}
+  .nm .p{font-size:9.5px;color:var(--ink3);letter-spacing:.04em}
+  .nm .d{font-size:12px;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
+
+  .vs{font-family:Consolas,monospace;font-size:10px;color:var(--ink3);min-width:158px;line-height:1.5}
+  .vs em{font-style:normal;color:var(--ink3);font-family:"Microsoft YaHei UI",sans-serif}
+  .vs b{color:var(--ink2);font-weight:600}
+  .vs .up{color:#a83232;font-weight:700}
+
+  .st{font-size:9.5px;border-radius:4px;padding:2px 7px;border:1px solid var(--line);white-space:nowrap}
+  .st.up{color:#93302f;border-color:#e6c8c6;background:#fbedec}
+  .st.ok{color:#2f6b3e;border-color:#c9ddcc;background:#eef5ef}
+  .st.newer{color:#2d5f7a;border-color:#c3d5e0;background:#eef4f7}
+  .st.none{color:#8a7f6f;border-color:#e0d6c5;background:#f3ede1}
+  .st.ask{color:#8a5a12;border-color:#e8d6b4;background:#faf3e4}
+  .st.fw{color:#8c3a3a;border-color:#e0c4c4;background:#faeeee}
+
+  .dev{font-size:10px;color:var(--ink3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sz{font-family:Consolas,monospace;font-size:10px;color:var(--ink3);min-width:52px;text-align:right}
+
+  .side{display:flex;flex-direction:column;gap:10px}
+  .panel{background:var(--paper2);border:1px solid var(--line);border-radius:9px;padding:12px 14px}
+  .panel h3{margin:0 0 8px;font-size:10px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11.5px;color:var(--ink2);
+        border-bottom:1px dotted var(--line)}
+  .stat:last-of-type{border-bottom:0}
+  .stat b{color:var(--ink);font-size:13.5px}
+  .stat .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:7px}
+  .quick{display:flex;gap:6px;margin-top:9px}
+  .quick .btn{flex:1;padding:7px 4px;font-size:10px}
+  .hint{font-size:9.5px;color:var(--ink3);line-height:1.7;margin-top:8px}
+  .log{font-family:Consolas,monospace;font-size:9.5px;color:var(--ink3);line-height:1.7}
+  .log i{color:var(--blue);font-style:normal}
+  .foot{display:flex;gap:14px;align-items:center;padding:8px 22px;border-top:1px solid var(--line);
+        font-size:10px;color:var(--ink3)}
+  .foot .mode{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div>
+      <div class="brand">AZ · LAZY DRIVER</div>
+      <div class="title">驱动懒人安装</div>
+      <div class="sub">Lenovo 官网对照 · 只读检测</div>
+    </div>
+    <div class="grow"></div>
+    <div class="machine">机型 <b>Legion Y7000P IRX9</b><br>MTM 83DG0002CD · SN MP2•••T3<br>Win11 26100 · 2026-10-19 13:20</div>
+    <button class="btn btn-ghost">重新检测</button>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="sec"><span class="k">需要处理</span><span class="n">1 项 · BIOS 请人工确认</span></div>
+      <div class="row up hot">
+        <div class="nm"><div class="p">BIOS</div><div class="d">BIOS 升级程序</div></div>
+        <div class="vs"><em>官网</em> <b class="up">NMCN35WW</b><br><em>本机</em> NMCN34WW</div>
+        <span class="st up">可更新</span>
+        <div class="dev">主板 BIOS / EC · 刷写有风险，仅手动</div>
+        <button class="btn-sm">查看说明</button>
+      </div>
+
+      <div class="sec"><span class="k">本机比官网新</span><span class="n">2 项 · 官网数据滞后，无需动作</span></div>
+      <div class="row newer">
+        <div class="nm"><div class="p">电源管理</div><div class="d">Lenovo Energy Management</div></div>
+        <div class="vs"><em>官网</em> 15.11.29.70<br><em>本机</em> <b>15.11.30.14</b></div>
+        <span class="st newer">本机更新</span>
+        <div class="dev">Lenovo ACPI-Compliant Virtual Power Controller</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row newer">
+        <div class="nm"><div class="p">电源管理</div><div class="d">Lenovo Fn and Function Keys</div></div>
+        <div class="vs"><em>官网</em> 2.0.12.1719<br><em>本机</em> <b>2.1.2602.8</b></div>
+        <span class="st newer">本机更新</span>
+        <div class="dev">Lenovo Fn and function keys</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+
+      <div class="sec"><span class="k">已是最新</span><span class="n">9 项</span></div>
+      <div class="row ok">
+        <div class="nm"><div class="p">主板</div><div class="d">Chipset Driver 主板驱动</div></div>
+        <div class="vs"><em>官网</em> 10.1.46.5<br><em>本机</em> 10.1.46.5</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Intel(R) LPC Controller/eSPI Controller - 7A0C</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">独立显卡</div><div class="d">NVIDIA VGA Driver 独立显卡驱动</div></div>
+        <div class="vs"><em>官网</em> 32.0.15.6624<br><em>本机</em> 32.0.15.6624</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">NVIDIA GeForce RTX 4060 Laptop GPU</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">声卡</div><div class="d">Audio Driver 声卡驱动</div></div>
+        <div class="vs"><em>官网</em> 6.0.9679.1<br><em>本机</em> 6.0.9679.1</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Realtek High Definition Audio(SST)</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">无线网卡</div><div class="d">Realtek Wlan Driver 无线网卡设备驱动</div></div>
+        <div class="vs"><em>官网</em> 6001.16.126.323<br><em>本机</em> 6001.16.126.323</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Realtek 8852CE WiFi 6E PCI-E NIC</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">有线网卡</div><div class="d">Ethernet Driver 有线网卡驱动</div></div>
+        <div class="vs"><em>官网</em> 1168.20.729.2024<br><em>本机</em> 1168.20.729.2024</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Realtek PCIe GbE Family Controller</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">蓝牙</div><div class="d">Realtek BlueTooth Driver 蓝牙驱动</div></div>
+        <div class="vs"><em>官网</em> 2.10.1072.3003<br><em>本机</em> 2.10.1072.3003</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Realtek Bluetooth Adapter</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">英特尔管理引擎接口</div><div class="d">Intel MEI Driver</div></div>
+        <div class="vs"><em>官网</em> 2433.6.3.0<br><em>本机</em> 2433.6.3.0</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Intel(R) Management Engine Interface #1</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">功耗调优</div><div class="d">Intel Dynamic Tuning Technology</div></div>
+        <div class="vs"><em>官网</em> 2.2.10000.20<br><em>本机</em> 2.2.10000.20</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Intel(R) Innovation Platform Framework</div>
+        <button class="btn-sm">重装</button>
+      </div>
+      <div class="row ok">
+        <div class="nm"><div class="p">串行总线</div><div class="d">Intel Serial-IO (SIO) Driver</div></div>
+        <div class="vs"><em>官网</em> 30.100.2417.30<br><em>本机</em> 30.100.2417.30</div>
+        <span class="st ok">已最新</span>
+        <div class="dev">Intel(R) Serial IO I2C Host Controller - 7A4C</div>
+        <button class="btn-sm">重装</button>
+      </div>
+
+      <div class="sec"><span class="k">待确认 / 本机无此硬件</span><span class="n">7 项</span></div>
+      <div class="row ask">
+        <div class="nm"><div class="p">摄像头</div><div class="d">Camera Driver 摄像头驱动</div></div>
+        <div class="vs"><em>官网</em> Realtek_10.0.22000.20332<br><em>本机</em> 未匹配</div>
+        <span class="st ask">待确认</span>
+        <div class="dev">官网未给硬件 ID，需人工核对</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row ask">
+        <div class="nm"><div class="p">读卡器</div><div class="d">Cardreader Driver 读卡器驱动</div></div>
+        <div class="vs"><em>官网</em> Genesys_4.5.10.0/Realtek<br><em>本机</em> 未匹配</div>
+        <span class="st ask">待确认</span>
+        <div class="dev">官网未给硬件 ID，需人工核对</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">集成显卡</div><div class="d">Intel VGA Driver</div></div>
+        <div class="vs"><em>官网</em> 32.0.101.6790<br><em>本机</em> —</div>
+        <span class="st none">无此硬件</span>
+        <div class="dev">本机独显直连，核显未启用</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">蓝牙</div><div class="d">Intel BlueTooth Driver</div></div>
+        <div class="vs"><em>官网</em> 23.120.0.4<br><em>本机</em> —</div>
+        <span class="st none">无此硬件</span>
+        <div class="dev">本机蓝牙为 Realtek</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">无线网卡</div><div class="d">Intel Wlan Driver</div></div>
+        <div class="vs"><em>官网</em> 23.120.0.3<br><em>本机</em> —</div>
+        <span class="st none">无此硬件</span>
+        <div class="dev">本机无线为 Realtek</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">显示器</div><div class="d">HDR Monitor Driver</div></div>
+        <div class="vs"><em>官网</em> 20.22.0.4<br><em>本机</em> —</div>
+        <span class="st none">无此硬件</span>
+        <div class="dev">官网对应 AUO98AC，本机屏为 AUOC1A5</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">驱动程序</div><div class="d">Sunia SPB (T-Con) 色彩管理</div></div>
+        <div class="vs"><em>官网</em> 1.0.7.6<br><em>本机</em> —</div>
+        <span class="st none">无此硬件</span>
+        <div class="dev">本机无 T-Con 设备</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+
+      <div class="sec"><span class="k">固件与可选应用</span><span class="n">4 项 · 永不自动执行</span></div>
+      <div class="row fw">
+        <div class="nm"><div class="p">固件</div><div class="d">Intel ME Firmware Update Tool</div></div>
+        <div class="vs"><em>官网</em> NMME03WW<br><em>本机</em> 未读取</div>
+        <span class="st fw">固件·仅人工</span>
+        <div class="dev">刷写 ME 固件，需手动处理</div>
+        <button class="btn-sm">查看说明</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">应用程序</div><div class="d">X-Rite Color Assistant</div></div>
+        <div class="vs"><em>官网</em> 2.50.0<br><em>本机</em> —</div>
+        <span class="st none">可选应用</span>
+        <div class="dev">屏幕校色工具，非驱动</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">应用程序</div><div class="d">AI画师</div></div>
+        <div class="vs"><em>官网</em> 02.00.112.1901<br><em>本机</em> —</div>
+        <span class="st none">仅 AI 机型</span>
+        <div class="dev">说明写明仅支持 AI 元启机型</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+      <div class="row none">
+        <div class="nm"><div class="p">应用程序</div><div class="d">天禧智能体下载器</div></div>
+        <div class="vs"><em>官网</em> 1.1.30.8171<br><em>本机</em> —</div>
+        <span class="st none">仅 AI 机型</span>
+        <div class="dev">说明写明仅支持 AI 元启机型</div>
+        <button class="btn-sm">下载官网</button>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h3>检测结果</h3>
+        <div class="stat"><span><span class="dot" style="background:var(--red)"></span>可更新</span><b>1</b></div>
+        <div class="stat"><span><span class="dot" style="background:var(--green)"></span>已最新</span><b>9</b></div>
+        <div class="stat"><span><span class="dot" style="background:var(--blue)"></span>本机更新</span><b>2</b></div>
+        <div class="stat"><span><span class="dot" style="background:var(--orange)"></span>待确认</span><b>2</b></div>
+        <div class="stat"><span><span class="dot" style="background:#d3c8b6"></span>无此硬件</span><b>5</b></div>
+        <div class="stat"><span><span class="dot" style="background:#8c3a3a"></span>固件 / 应用</span><b>4</b></div>
+        <div class="quick">
+          <button class="btn btn-ghost">备份驱动</button>
+          <button class="btn btn-ghost">回滚</button>
+        </div>
+        <div class="hint">数据来自 Lenovo 官网序列号查询。固件永不自动执行。</div>
+      </div>
+
+      <div class="panel">
+        <h3>日志</h3>
+        <div class="log">
+          <i>·</i> SN MP2GK4T3<br>
+          <i>·</i> 机型档案 OK（83DG0002CD）<br>
+          <i>·</i> 官网清单 23 条 / 17 部件<br>
+          <i>·</i> 本机设备 266 项<br>
+          <i>·</i> 硬件匹配 16 项 · 无硬件 5 项<br>
+          <i>·</i> 完成 · 2.1s
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>数据来源</h3>
+        <div class="hint" style="margin-top:0">
+          Lenovo 官方接口，按序列号实时查询。<br>
+          官网版本 = 官方当前发布版；<br>
+          本机版本 = 设备管理器实际驱动。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>官网 23 条</span><span>本机 266 设备</span>
+    <span>外设不在范围内</span><span class="mode">只读 · 未执行任何安装</span>
+  </div>
+</div>
+</body>
+</html>

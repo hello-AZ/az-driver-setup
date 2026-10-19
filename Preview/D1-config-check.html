@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>分区草图 A · 配置核对</title>
+<style>
+  :root{
+    --paper:#f7f1e5; --paper2:#fdfaf2; --paper3:#f2ebdb;
+    --ink:#3b3227; --ink2:#6b5f50; --ink3:#9a8d7c;
+    --line:#e3d9c8; --line2:#d5c9b4;
+    --blue:#3a6b8a; --green:#4a7c59; --red:#a83232; --amber:#b8860b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+    font-size:13px; -webkit-font-smoothing:antialiased;
+  }
+  .app{width:1200px;height:862px;display:flex;flex-direction:column;overflow:hidden}
+
+  /* 顶栏 */
+  .top{
+    height:54px;flex:0 0 54px;display:flex;align-items:center;
+    padding:0 18px;background:var(--paper2);border-bottom:1px solid var(--line);
+  }
+  .mark{
+    width:26px;height:26px;border-radius:7px;background:var(--ink);
+    color:var(--paper);display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;margin-right:10px;
+  }
+  .brand{font-size:14.5px;font-weight:700;letter-spacing:.3px}
+  .brand small{font-weight:400;color:var(--ink3);font-size:11px;margin-left:7px;letter-spacing:0}
+  .identity{margin-left:auto;text-align:right;font-size:11.5px;color:var(--ink2);line-height:1.45}
+  .identity b{color:var(--ink);font-weight:600}
+  .identity .sn{font-family:Consolas,monospace;color:var(--ink3);font-size:10.5px}
+
+  /* 主体 */
+  .body{flex:1;display:flex;min-height:0}
+
+  /* 左导航 */
+  .nav{
+    width:176px;flex:0 0 176px;background:var(--paper2);
+    border-right:1px solid var(--line);padding:14px 0;display:flex;flex-direction:column;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:9px;padding:9px 16px;margin:1px 8px;
+    border-radius:6px;color:var(--ink2);font-size:13px;cursor:default;
+  }
+  .nav-item .ico{width:15px;text-align:center;font-size:12px;color:var(--ink3)}
+  .nav-item .dot{
+    width:7px;height:7px;border-radius:50%;margin-left:auto;
+    background:var(--line2);
+  }
+  .nav-item .dot.ok{background:var(--green)}
+  .nav-item .dot.warn{background:var(--amber)}
+  .nav-item.active{
+    background:var(--paper3);color:var(--ink);font-weight:600;
+    box-shadow:inset 2px 0 0 var(--blue);
+  }
+  .nav-item.active .ico{color:var(--blue)}
+  .nav-sep{height:1px;background:var(--line);margin:12px 16px}
+  .nav-foot{margin-top:auto;padding:10px 16px;font-size:11px;color:var(--ink3);line-height:1.7}
+  .nav-foot b{color:var(--blue);font-size:15px;font-weight:700}
+
+  /* 内容区 */
+  .main{flex:1;overflow:hidden;padding:18px 22px 0;display:flex;flex-direction:column;min-width:0}
+  .page-head{display:flex;align-items:flex-start;margin-bottom:12px}
+  .page-title{font-size:17px;font-weight:700;letter-spacing:.3px}
+  .page-sub{font-size:11.5px;color:var(--ink3);margin-top:3px}
+  .head-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+  .btn{
+    border:1px solid var(--line2);background:var(--paper2);color:var(--ink2);
+    padding:6px 13px;border-radius:6px;font-size:12px;font-family:inherit;
+  }
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:600}
+  .btn.ghost{background:transparent}
+
+  /* 汇总条 */
+  .summary{
+    display:flex;align-items:center;gap:0;border:1px solid var(--line);
+    border-radius:8px;background:var(--paper2);margin-bottom:12px;overflow:hidden;
+  }
+  .sum-cell{padding:9px 16px;border-right:1px solid var(--line);font-size:11.5px;color:var(--ink3)}
+  .sum-cell:last-child{border-right:0}
+  .sum-cell b{color:var(--ink);font-size:14px;font-weight:700;margin-right:4px}
+  .sum-cell b.g{color:var(--green)}
+  .sum-cell b.a{color:var(--amber)}
+
+  /* 卡片网格 */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;overflow:hidden}
+  .card{
+    background:var(--paper2);border:1px solid var(--line);border-radius:8px;
+    padding:9px 13px 8px;
+  }
+  .card.wide{grid-column:1 / -1}
+  .card-head{display:flex;align-items:center;margin-bottom:8px}
+  .card-title{font-size:12.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px}
+  .card-title .en{font-size:10px;font-weight:400;color:var(--ink3);letter-spacing:.6px;text-transform:uppercase}
+  .card-state{margin-left:auto;font-size:10.5px;padding:2px 7px;border-radius:20px}
+  .card-state.ok{color:var(--green);background:rgba(74,124,89,.10)}
+  .card-state.wait{color:var(--ink3);background:var(--paper3)}
+  .card-state.warn{color:var(--amber);background:rgba(184,134,11,.10)}
+
+  .row{display:flex;padding:3px 0;font-size:12px;line-height:1.5}
+  .row .k{width:74px;flex:0 0 74px;color:var(--ink3);font-size:11.5px}
+  .row .v{color:var(--ink);font-weight:500}
+  .row .v.mono{font-family:Consolas,monospace;font-size:11.5px;font-weight:400}
+  .row .v .unit{color:var(--ink3);font-weight:400;font-size:11px;margin-left:3px}
+  .row .v .dim{color:var(--ink3);font-weight:400}
+
+  /* 健康度条 */
+  .bar{height:4px;border-radius:2px;background:var(--paper3);margin-top:5px;overflow:hidden;width:100%}
+  .bar i{display:block;height:100%;background:var(--green);border-radius:2px}
+  .bar i.warn{background:var(--amber)}
+
+  .foot{
+    flex:0 0 30px;margin:12px -22px 0;padding:0 22px;display:flex;align-items:center;
+    border-top:1px solid var(--line);font-size:11px;color:var(--ink3);background:var(--paper2);
+  }
+  .foot .src{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 顶栏 -->
+  <div class="top">
+    <div class="mark">AZ</div>
+    <div class="brand">驱动懒人安装 <small>Driver Setup · 0.2</small></div>
+    <div class="identity">
+      <b>Legion Y7000P IRX9</b><br>
+      <span class="sn">MTM 83DG0002CD · SN MP2GK4T3</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- 左导航 -->
+    <div class="nav">
+      <div class="nav-item active"><span class="ico">◈</span>配置核对<span class="dot warn"></span></div>
+      <div class="nav-item"><span class="ico">⬇</span>驱动安装<span class="dot warn"></span></div>
+      <div class="nav-item"><span class="ico">⚙</span>固件提示<span class="dot warn"></span></div>
+      <div class="nav-item"><span class="ico">⟲</span>备份回滚<span class="dot"></span></div>
+      <div class="nav-sep"></div>
+      <div class="nav-foot">
+        本机核对进度<br>
+        <b>3</b> / 7 项已确认
+      </div>
+    </div>
+
+    <!-- 内容 -->
+    <div class="main">
+      <div class="page-head">
+        <div>
+          <div class="page-title">配置核对</div>
+          <div class="page-sub">采集本机硬件，与购买配置逐项对照。确认无误后点「通过」，左侧圆点转绿。</div>
+        </div>
+        <div class="head-right">
+          <button class="btn ghost">重新检测</button>
+          <button class="btn primary">确认全部无误</button>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="sum-cell"><b>7</b>项硬件</div>
+        <div class="sum-cell"><b class="g">3</b>已确认</div>
+        <div class="sum-cell"><b class="a">4</b>待核对</div>
+        <div class="sum-cell" style="color:var(--ink3)">采集耗时 1.4 s</div>
+      </div>
+
+      <div class="grid">
+
+        <!-- CPU -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">处理器 <span class="en">CPU</span></div>
+            <span class="card-state ok">✓ 已确认</span>
+          </div>
+          <div class="row"><span class="k">型号</span><span class="v">Intel Core i7-14650HX</span></div>
+          <div class="row"><span class="k">核心 / 线程</span><span class="v">16 核 / 24 线程</span></div>
+        </div>
+
+        <!-- 显卡 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">显卡 <span class="en">GPU</span></div>
+            <span class="card-state ok">✓ 已确认</span>
+          </div>
+          <div class="row"><span class="k">型号</span><span class="v">NVIDIA GeForce RTX 4060 Laptop</span></div>
+          <div class="row"><span class="k">显存</span><span class="v">8 GB<span class="unit">GDDR6</span></span></div>
+          <div class="row"><span class="k">驱动版本</span><span class="v mono">32.0.15.6624</span></div>
+        </div>
+
+        <!-- 内存 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">内存 <span class="en">Memory</span></div>
+            <span class="card-state ok">✓ 已确认</span>
+          </div>
+          <div class="row"><span class="k">总容量</span><span class="v">16 GB<span class="unit">2 × 8 GB</span></span></div>
+          <div class="row"><span class="k">运行频率</span><span class="v">5600 MHz<span class="unit">DDR5</span></span></div>
+          <div class="row"><span class="k">插槽</span><span class="v" style="font-size:11px;color:var(--ink2)">DIMM 0 · Samsung M425R1GB4BB0-CWMOD</span></div>
+        </div>
+
+        <!-- 硬盘 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">硬盘 <span class="en">Storage</span></div>
+            <span class="card-state wait">待核对</span>
+          </div>
+          <div class="row"><span class="k">型号</span><span class="v">Samsung MZVL21T0HDLU-00BLL</span></div>
+          <div class="row"><span class="k">容量</span><span class="v">1 TB<span class="unit">C: D:</span></span></div>
+          <div class="row"><span class="k">健康度</span><span class="v" style="color:var(--green)">100 %</span></div>
+          <div class="bar"><i style="width:100%"></i></div>
+          <div class="row" style="margin-top:3px"><span class="k">通电时间</span><span class="v">1,284 小时<span class="unit">· 写入 6.2 TB</span></span></div>
+        </div>
+
+        <!-- 屏幕 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">屏幕 <span class="en">Display</span></div>
+            <span class="card-state wait">待核对</span>
+          </div>
+          <div class="row"><span class="k">分辨率</span><span class="v">2560 × 1600<span class="unit">16:10</span></span></div>
+          <div class="row"><span class="k">刷新率</span><span class="v">165 Hz</span></div>
+          <div class="row"><span class="k">尺寸</span><span class="v">16.0 英寸</span></div>
+          <div class="row"><span class="k">面板</span><span class="v mono" style="font-size:11px">BOE NE160QDM-NZ6</span></div>
+          <div class="row"><span class="k">色域</span><span class="v">sRGB 102 %<span class="unit">容积比 · DCI-P3 76 %</span></span></div>
+        </div>
+
+        <!-- 电池 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">电池 <span class="en">Battery</span></div>
+            <span class="card-state wait">待核对</span>
+          </div>
+          <div class="row"><span class="k">设计容量</span><span class="v">80.0 Wh</span></div>
+          <div class="row"><span class="k">实际容量</span><span class="v">76.4 Wh</span></div>
+          <div class="row"><span class="k">损耗</span><span class="v" style="color:var(--amber)">4.5 %<span class="unit">健康度 95.5 %</span></span></div>
+          <div class="bar"><i class="warn" style="width:95%"></i></div>
+          <div class="row" style="margin-top:3px"><span class="k">循环次数</span><span class="v">37 次</span></div>
+        </div>
+
+        <!-- 网卡 -->
+        <div class="card wide">
+          <div class="card-head">
+            <div class="card-title">网络适配器 <span class="en">Network</span></div>
+            <span class="card-state warn">与官网不符</span>
+          </div>
+          <div class="row"><span class="k">有线</span><span class="v">Realtek PCIe GbE Family Controller<span class="dim" style="margin-left:8px;font-size:10.5px">RTL8168 · 已连接</span></span></div>
+          <div class="row"><span class="k">无线</span><span class="v">Realtek RTL8852BE WiFi 6 802.11ax<span class="dim" style="margin-left:8px;font-size:10.5px">官网清单为 Intel AX201</span></span></div>
+          <div class="row"><span class="k">蓝牙</span><span class="v">Realtek Bluetooth Adapter<span class="dim" style="margin-left:8px;font-size:10.5px">2.10.1072.3003</span></span></div>
+        </div>
+
+      </div>
+
+      <div class="foot">
+        <span>数据来源：WMI / 注册表 EDID / SMART IOCTL / root\WMI 电池类 · 全部只读</span>
+        <span class="src">采集 7/7 · 无需管理员（SMART 除外）</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

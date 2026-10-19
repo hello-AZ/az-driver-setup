@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>C2 · 本机设备视角（浅色纸本）</title>
+<style>
+  :root{
+    --paper:#f7f1e5; --paper2:#fdfaf2; --ink:#3b3227; --ink2:#6b5f50; --ink3:#9a8d7c;
+    --line:#e3d9c8; --green:#3f7d4f; --orange:#b5761f; --red:#a83232; --blue:#3a6b8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font-family:"Microsoft YaHei UI","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .app{width:1010px;margin:0 auto}
+
+  .topbar{display:flex;align-items:flex-start;gap:12px;padding:18px 22px 14px;border-bottom:1px solid var(--line)}
+  .brand{font-size:10.5px;letter-spacing:.24em;color:var(--blue);font-weight:700}
+  .title{font-size:24px;font-weight:700;margin-top:3px;letter-spacing:.02em}
+  .sub{font-size:11.5px;color:var(--ink3);margin-top:3px}
+  .grow{flex:1}
+  .path{background:var(--paper2);border:1px solid var(--line);border-radius:7px;padding:7px 11px;
+        font-size:11px;color:var(--ink3);white-space:nowrap}
+  .path b{color:var(--ink);font-weight:600}
+  .btn{border:0;border-radius:7px;padding:7px 13px;font-size:12px;font-weight:600;
+       font-family:inherit;cursor:pointer;white-space:nowrap}
+  .btn-ghost{background:var(--paper2);color:var(--ink);border:1px solid var(--line)}
+  .btn-main{background:var(--ink);color:var(--paper)}
+  .btn-sm{background:transparent;color:var(--ink2);border:1px solid var(--line);padding:4px 9px;font-size:10.5px;border-radius:6px;white-space:nowrap}
+  .btn-sm:hover{background:#efe6d5}
+
+  .tabs{display:flex;gap:2px;padding:10px 22px 0}
+  .tab{font-size:12px;padding:6px 14px;border:1px solid transparent;border-bottom:0;border-radius:7px 7px 0 0;
+       color:var(--ink3);cursor:pointer}
+  .tab.on{background:var(--paper2);border-color:var(--line);color:var(--ink);font-weight:600;margin-bottom:-1px}
+
+  .main{display:grid;grid-template-columns:1fr 284px;gap:16px;padding:12px 22px 6px;border-top:1px solid var(--line)}
+
+  .group{margin-bottom:12px}
+  .group-h{display:flex;align-items:baseline;gap:8px;margin:0 0 6px 2px}
+  .group-h .k{font-size:10.5px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+  .group-h .n{font-size:10.5px;color:var(--ink3)}
+
+  .row{display:flex;align-items:center;gap:10px;background:var(--paper2);border:1px solid var(--line);
+       border-radius:8px;padding:8px 12px 8px 13px;margin-bottom:5px;position:relative;overflow:hidden}
+  .row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
+  .row.ok::before{background:var(--green)}
+  .row.miss::before{background:var(--red)}
+  .row.sys::before{background:#d3c8b6}
+  .row.none::before{background:var(--orange)}
+
+  .dev{min-width:236px}
+  .dev .nm{font-size:12.5px;font-weight:600}
+  .dev .id{font-family:Consolas,monospace;font-size:9.5px;color:var(--ink3);margin-top:2px}
+
+  .ver{font-family:Consolas,monospace;font-size:10.5px;color:var(--ink2);min-width:126px}
+  .ver em{font-style:normal;font-size:9px;color:var(--ink3);display:block;font-family:"Microsoft YaHei UI",sans-serif}
+
+  .tag{font-size:9.5px;border-radius:4px;padding:1.5px 6px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+  .tag.ok{color:#2f6b3e;border-color:#c9ddcc;background:#eef5ef}
+  .tag.local{color:#2d5f7a;border-color:#c3d5e0;background:#eef4f7}
+  .tag.sys{color:#8a7f6f;border-color:#e0d6c5;background:#f3ede1}
+  .tag.none{color:#8a5a12;border-color:#e8d6b4;background:#faf3e4}
+
+  .spacer{flex:1}
+
+  /* 右栏 */
+  .side{display:flex;flex-direction:column;gap:11px}
+  .panel{background:var(--paper2);border:1px solid var(--line);border-radius:9px;padding:12px 14px}
+  .panel h3{margin:0 0 8px;font-size:10.5px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11.5px;color:var(--ink2);
+        border-bottom:1px dotted var(--line)}
+  .stat:last-of-type{border-bottom:0}
+  .stat b{color:var(--ink);font-size:14px}
+  .stat .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:7px}
+
+  .quick{display:flex;gap:6px;margin-top:9px}
+  .quick .btn{flex:1;padding:7px 4px;font-size:10.5px}
+
+  .hint{font-size:10px;color:var(--ink3);line-height:1.7;margin-top:9px}
+
+  .log{font-family:Consolas,monospace;font-size:9.5px;color:var(--ink3);line-height:1.75}
+  .log i{color:var(--blue);font-style:normal}
+
+  .foot{display:flex;gap:14px;align-items:center;padding:9px 22px;border-top:1px solid var(--line);
+        font-size:10.5px;color:var(--ink3)}
+  .foot .mode{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div>
+      <div class="brand">AZ · LAZY DRIVER</div>
+      <div class="title">驱动懒人安装</div>
+      <div class="sub">本机检测 · Legion Y7000P IRX9 · Windows 11 26100</div>
+    </div>
+    <div class="grow"></div>
+    <div class="path">离线包 <b>D:\Driver</b></div>
+    <button class="btn btn-ghost">重新检测</button>
+  </div>
+
+  <div class="tabs">
+    <span class="tab on">本机设备（267）</span>
+    <span class="tab">离线仓库（17 个包）</span>
+    <span class="tab">备份与回滚</span>
+  </div>
+
+  <div class="main">
+    <div>
+      <!-- 显示 -->
+      <div class="group">
+        <div class="group-h"><span class="k">显示</span><span class="n">2 个 · 驱动均正常</span></div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">NVIDIA GeForce RTX 4060 Laptop GPU</div>
+            <div class="id">PCI\VEN_10DE&amp;DEV_28E0&amp;SUBSYS_3E4517AA</div></div>
+          <div class="ver">32.0.15.6624<em>2024-11-22</em></div>
+          <span class="tag local">本地包 NVVGA</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row sys">
+          <div class="dev"><div class="nm">内置显示器 AUOC1A5</div>
+            <div class="id">DISPLAY\AUOC1A5\5&amp;14297EA0</div></div>
+          <div class="ver">Generic PnP Monitor<em>系统自带</em></div>
+          <span class="tag sys">系统驱动</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">官网 ↗</button>
+        </div>
+      </div>
+
+      <!-- 网络 -->
+      <div class="group">
+        <div class="group-h"><span class="k">网络与蓝牙</span><span class="n">3 个</span></div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Realtek 8852CE WiFi 6E PCI-E NIC</div>
+            <div class="id">PCI\VEN_10EC&amp;DEV_C852&amp;SUBSYS_585217AA</div></div>
+          <div class="ver">6001.16.126.323<em>2024-10-02</em></div>
+          <span class="tag local">本地包 RTKwlan</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Realtek PCIe GbE Family Controller</div>
+            <div class="id">PCI\VEN_10EC&amp;DEV_8168&amp;SUBSYS_396E17AA</div></div>
+          <div class="ver">1168.20.729.2024<em>2024-07-29</em></div>
+          <span class="tag local">本地包 lan</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row none">
+          <div class="dev"><div class="nm">Realtek Bluetooth Adapter</div>
+            <div class="id">USB\VID_0BDA&amp;PID_5852</div></div>
+          <div class="ver">2.10.1072.3003<em>2024-09-28</em></div>
+          <span class="tag none">无本地包</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">去下载 ↗</button>
+        </div>
+      </div>
+
+      <!-- 音频 -->
+      <div class="group">
+        <div class="group-h"><span class="k">音频</span><span class="n">2 个</span></div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Realtek(R) Audio（SST 总线）</div>
+            <div class="id">INTELAUDIO\VEN_10EC&amp;DEV_0257&amp;SUBSYS_17AA3CB8</div></div>
+          <div class="ver">6.0.9679.1<em>2024-05-07</em></div>
+          <span class="tag local">本地包 audio</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">NVIDIA High Definition Audio</div>
+            <div class="id">HDAUDIO\VEN_10DE&amp;DEV_00A7&amp;SUBSYS_17AA3E45</div></div>
+          <div class="ver">1.4.2.6<em>2024-11-22</em></div>
+          <span class="tag local">随显卡包</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+      </div>
+
+      <!-- 系统 -->
+      <div class="group">
+        <div class="group-h"><span class="k">芯片组与系统</span><span class="n">6 个</span></div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Intel(R) LPC Controller / eSPI - 7A0C</div>
+            <div class="id">PCI\VEN_8086&amp;DEV_7A0C&amp;SUBSYS_380717AA</div></div>
+          <div class="ver">10.1.46.5<em>芯片组</em></div>
+          <span class="tag local">本地包 chipset</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Intel(R) Management Engine Interface #1</div>
+            <div class="id">PCI\VEN_8086&amp;DEV_7A68&amp;SUBSYS_383717AA</div></div>
+          <div class="ver">2433.6.3.0<em>2024-08-15</em></div>
+          <span class="tag local">本地包 MEI</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Intel(R) Serial IO I2C Host Controller - 7A4C</div>
+            <div class="id">PCI\VEN_8086&amp;DEV_7A4C&amp;SUBSYS_382E17AA</div></div>
+          <div class="ver">30.100.2417.30<em>2024-04-24</em></div>
+          <span class="tag local">本地包 SIO</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Intel 功耗调优 (DPTF)</div>
+            <div class="id">ACPI\INTC1046\SEN1</div></div>
+          <div class="ver">2.2.10000.20<em>2024-05-17</em></div>
+          <span class="tag local">本地包 dynamic</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+        <div class="row none">
+          <div class="dev"><div class="nm">Intel(R) 智音技术总线（SST）</div>
+            <div class="id">PCI\VEN_8086&amp;DEV_7A50&amp;SUBSYS_383217AA</div></div>
+          <div class="ver">10.29.0.11060<em>2024-05-07</em></div>
+          <span class="tag none">无本地包</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">去下载 ↗</button>
+        </div>
+        <div class="row ok">
+          <div class="dev"><div class="nm">Lenovo ACPI-Compliant Virtual Power Controller</div>
+            <div class="id">ACPI\VPC2004</div></div>
+          <div class="ver">15.11.30.14<em>2026-05-19</em></div>
+          <span class="tag local">本地包 EM</span><span class="tag ok">已就绪</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">重装</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-h"><span class="k">固件</span><span class="n">2 个 · 高危锁定</span></div>
+        <div class="row miss" style="background:#fbf1ee;border-color:#e8cfc8">
+          <div class="dev"><div class="nm">BIOS / ME 固件</div>
+            <div class="id">主板 SPI Flash · 不参与设备枚举</div></div>
+          <div class="ver">当前未读取<em>需另行检测</em></div>
+          <span class="tag" style="color:#96302f;border-color:#e6c8c6;background:#fbedec">高危</span>
+          <span class="tag sys">仅人工</span>
+          <div class="spacer"></div>
+          <button class="btn-sm">查看说明</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="side">
+      <div class="panel">
+        <h3>本机概况</h3>
+        <div class="stat"><span><span class="dot" style="background:var(--green)"></span>设备已就绪</span><b>267</b></div>
+        <div class="stat"><span><span class="dot" style="background:var(--red)"></span>缺驱动 / 异常</span><b>0</b></div>
+        <div class="stat"><span><span class="dot" style="background:var(--orange)"></span>无本地包</span><b>3</b></div>
+        <div class="stat"><span><span class="dot" style="background:#c9bda8"></span>高危固件</span><b>2</b></div>
+        <div class="quick">
+          <button class="btn btn-ghost">备份当前驱动</button>
+          <button class="btn btn-ghost">回滚</button>
+        </div>
+        <div class="hint">「无本地包」的设备会给出官网/更新目录链接，点开自己下。</div>
+      </div>
+
+      <div class="panel">
+        <h3>检测日志</h3>
+        <div class="log">
+          <i>·</i> 枚举 PnP 设备 267 项<br>
+          <i>·</i> 读取签名驱动 270 项<br>
+          <i>·</i> 异常设备 0 项<br>
+          <i>·</i> 匹配本地包 14 项<br>
+          <i>·</i> 无本地包 3 项（蓝牙/智音总线/触摸板）<br>
+          <i>·</i> 完成 · 1.8s
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>重装系统后</h3>
+        <div class="hint" style="margin-top:0">
+          未识别设备会以红色出现在这里，<br>
+          每个都标明「该装哪个本地包」，<br>
+          没有包的给下载链接。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>本机 267 设备</span><span>离线包 17 个 · 1.8 GB</span>
+    <span>外设不在本工具范围内</span><span class="mode">只读检测</span>
+  </div>
+</div>
+</body>
+</html>
