@@ -6,7 +6,7 @@ using System.Management;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Web.Script.Serialization;
+using System.Text.Json;
 
 namespace DriverSetup
 {
@@ -104,9 +104,39 @@ namespace DriverSetup
 
         private static Dictionary<string, object> Parse(string json)
         {
-            var ser = new JavaScriptSerializer();
-            ser.MaxJsonLength = int.MaxValue;
-            return ser.Deserialize<Dictionary<string, object>>(json);
+            using (var doc = JsonDocument.Parse(json))
+                return ToDict(doc.RootElement);
+        }
+
+        /// <summary>把 JsonElement 摊平成普通字典/列表，等价于原来 JavaScriptSerializer 的结果</summary>
+        private static Dictionary<string, object> ToDict(JsonElement e)
+        {
+            var d = new Dictionary<string, object>();
+            foreach (var p in e.EnumerateObject()) d[p.Name] = ToObj(p.Value);
+            return d;
+        }
+
+        private static object ToObj(JsonElement e)
+        {
+            switch (e.ValueKind)
+            {
+                case JsonValueKind.Object: return ToDict(e);
+                case JsonValueKind.Array:
+                    // 原生 JavaScriptSerializer 把数组还原成 ArrayList，沿用同样的类型
+                    var list = new System.Collections.ArrayList();
+                    foreach (var x in e.EnumerateArray()) list.Add(ToObj(x));
+                    return list;
+                case JsonValueKind.String: return e.GetString();
+                case JsonValueKind.Number:
+                    long l;
+                    if (e.TryGetInt64(out l)) return l;
+                    double db;
+                    if (e.TryGetDouble(out db)) return db;
+                    return e.GetRawText();
+                case JsonValueKind.True: return true;
+                case JsonValueKind.False: return false;
+                default: return null;
+            }
         }
 
         private static string S(Dictionary<string, object> d, string key)

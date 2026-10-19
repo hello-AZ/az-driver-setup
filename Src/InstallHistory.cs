@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Web.Script.Serialization;
+using System.Text.Json;
 
 namespace DriverSetup
 {
@@ -30,14 +30,19 @@ namespace DriverSetup
             get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "install-history.json"); }
         }
 
+        private static readonly JsonSerializerOptions JsonOpts = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
+
         public static List<Entry> Load()
         {
             try
             {
                 if (!File.Exists(FilePath)) return new List<Entry>();
                 string json = File.ReadAllText(FilePath, Encoding.UTF8);
-                var ser = new JavaScriptSerializer();
-                var list = ser.Deserialize<List<Entry>>(json);
+                var list = JsonSerializer.Deserialize<List<Entry>>(json, JsonOpts);
                 return list ?? new List<Entry>();
             }
             catch { return new List<Entry>(); }
@@ -53,8 +58,7 @@ namespace DriverSetup
                 // 只保留最近 200 条
                 if (all.Count > 200) all = all.Skip(all.Count - 200).ToList();
 
-                var ser = new JavaScriptSerializer();
-                File.WriteAllText(FilePath, ser.Serialize(all), Encoding.UTF8);
+                File.WriteAllText(FilePath, JsonSerializer.Serialize(all, JsonOpts), Encoding.UTF8);
             }
             catch { }
         }
