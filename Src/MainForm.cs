@@ -194,8 +194,8 @@ namespace DriverSetup
             _machineInfo.TextAlign = ContentAlignment.MiddleRight;
             _machineInfo.Font = new Font("Microsoft YaHei UI", 8.2F);
             _machineInfo.ForeColor = Ink3;
-            _machineInfo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            _machineInfo.Location = new Point(ClientSize.Width - 430, 20);
+            // 不用 Anchor：构造时 ClientSize 还是默认 300，-430 会算出负数跑到窗口外
+            _machineInfo.Location = new Point(200, 20);
 
             _btnRefresh = new Button();
             _btnRefresh.Text = "重新检测";
@@ -205,8 +205,7 @@ namespace DriverSetup
             _btnRefresh.BackColor = Paper2;
             _btnRefresh.ForeColor = Ink;
             _btnRefresh.Size = new Size(104, 34);
-            _btnRefresh.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            _btnRefresh.Location = new Point(ClientSize.Width - 124, 28);
+            _btnRefresh.Location = new Point(200, 28);
             _btnRefresh.Click += delegate { RefreshAll(); };
 
             top.Paint += delegate(object o, PaintEventArgs e)
@@ -220,6 +219,16 @@ namespace DriverSetup
             top.Controls.Add(sub);
             top.Controls.Add(_machineInfo);
             top.Controls.Add(_btnRefresh);
+
+            // 顶栏尺寸定下来后再摆右侧两个控件（构造阶段 ClientSize 不可靠）
+            Action placeTopRight = delegate
+            {
+                if (top.Width < 450) return;
+                _machineInfo.Location = new Point(top.Width - 448, 16);
+                _btnRefresh.Location = new Point(top.Width - 124, 26);
+            };
+            top.Resize += delegate { placeTopRight(); };
+            top.HandleCreated += delegate { placeTopRight(); };
 
             // 右栏
             var side = new Panel();
