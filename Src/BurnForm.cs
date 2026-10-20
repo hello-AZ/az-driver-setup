@@ -254,7 +254,12 @@ namespace DriverSetup
             s += "   ·   风扇由 EC 管理，Windows 侧读不到";
             // 没采样过不等于没权限：这时什么都不提
             if (_sampler.HasSampled && !_sampler.CpuTempAvailable)
-                s += "   ·   读不到 CPU 温度（需要以管理员身份运行）";
+            {
+                // 分两种情况：没提权 vs 提了权但 LHM 不认这颗 CPU 的传感器
+                s += _sampler.IsAdmin
+                    ? "   ·   读不到 CPU 温度（该型号的传感器未被 LHM 支持）"
+                    : "   ·   读不到 CPU 温度（需要以管理员身份运行）";
+            }
             else if (!_sampler.HasSampled)
                 s += "   ·   按「开始烤机」后读取传感器";
             _lblState.Text = s;

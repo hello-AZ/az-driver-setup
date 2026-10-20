@@ -235,17 +235,31 @@ namespace DriverSetup
                 {
                     _cpu.Update();
                     double coreMax = double.NaN, coreAvg = double.NaN, c1 = double.NaN;
+                    double tempFallback = double.NaN;   // 兜底：所有温度里的最高值
+                    double clockFallback = double.NaN;  // 兜底：任意核心频率
                     foreach (var s in _cpu.Sensors)
                     {
                         if (s.Value == null) continue;
                         if (s.SensorType == SensorType.Temperature)
                         {
-                            if (s.Name == "Core Max") coreMax = s.Value.Value;
-                            else if (s.Name == "Core Average") coreAvg = s.Value.Value;
+                            double v = s.Value.Value;
+                            if (s.Name == "Core Max") coreMax = v;
+                            else if (s.Name == "Core Average") coreAvg = v;
+
+                            // AMD 的 LHM 传感器名是 "Core (Tctl/Tdie)" / "CCD1 (Tdie)" 之类，
+                            // 跟 Intel 的 "Core Max" 对不上，硬编码名字会读到 NaN。
+                            // 这里同时收集最大值兜底——_cpu 只含 CPU 传感器，不会混进主板温度。
+                            if (double.IsNaN(tempFallback) || v > tempFallback) tempFallback = v;
                         }
                         else if (s.SensorType == SensorType.Clock && s.Name == "CPU Core #1")
                         {
                             c1 = s.Value.Value;
+                        }
+                        else if (s.SensorType == SensorType.Clock && s.Name != null &&
+                                 s.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            double cv = s.Value.Value;
+                            if (double.IsNaN(clockFallback) || cv > clockFallback) clockFallback = cv;
                         }
                         else if (s.SensorType == SensorType.Power && s.Name != null &&
                                  s.Name.IndexOf("Package", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -258,9 +272,12 @@ namespace DriverSetup
                             p.CpuVoltage = s.Value.Value;
                         }
                     }
-                    p.CpuTemp = !double.IsNaN(coreMax) ? coreMax : coreAvg;
-                    CpuTempAvailable = !double.IsNaN(p.CpuTemp);   // 状态行靠它决定是否提示"需管理员"
+                    // 优先 Intel 的 Core Max / Core Average，认不到就用兜底最大值
+                    p.CpuTemp = !double.IsNaN(coreMax) ? coreMax
+                              : (!double.IsNaN(coreAvg) ? coreAvg : tempFallback);
+                    CpuTempAvailable = !double.IsNaN(p.CpuTemp);
                     if (!double.IsNaN(c1)) p.CpuClock = c1;
+                    else if (!double.IsNaN(clockFallback)) p.CpuClock = clockFallback;
                 }
                 catch (Exception ex) { Log.Swallow(ex, "PerfSampler:260"); }
             }
