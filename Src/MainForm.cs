@@ -952,17 +952,20 @@ namespace DriverSetup
         private void ShowUnsupported(string vendor)
         {
             _listPanel.Controls.Clear();
+
             var l = new Label();
             l.Text = "暂不支持该厂商：" + (string.IsNullOrEmpty(vendor) ? "未识别" : vendor) +
-                     "\r\n\r\n当前支持的厂商：" + CatalogFactory.SupportedVendors() +
-                     "\r\n\r\n新增厂商只需在 Catalog.cs 里增加一个 IDriverCatalog 实现。";
-            l.Font = new Font("Microsoft YaHei UI", 10F);
+                     "    当前支持：" + CatalogFactory.SupportedVendors();
+            l.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold);
             l.ForeColor = Ink2;
-            l.AutoSize = false;
-            l.Size = new Size(620, 150);
-            l.Margin = new Padding(22, 24, 0, 0);
+            l.AutoSize = true;
+            l.Margin = new Padding(22, 18, 0, 10);
             _listPanel.Controls.Add(l);
-            _status.Text = "不支持的厂商";
+
+            // 不支持 ≠ 死路：这张机器照样能靠通用驱动跑起来
+            _listPanel.Controls.Add(EmergencyGuide.Build());
+
+            _status.Text = "不支持的厂商 · 可用通用驱动";
             _machineInfo.Text = vendor;
             BuildStats(0, 0, 0, 0, 0, 0);
         }
@@ -1230,11 +1233,24 @@ namespace DriverSetup
             _sideStats.Controls.Add(b1);
             _sideStats.Controls.Add(b2);
 
+            // 查不到机型 / 非联想机器时的兜底入口
+            var b3 = new Button();
+            b3.Text = "查不到机型？看应急方案";
+            b3.FlatStyle = FlatStyle.Flat;
+            b3.FlatAppearance.BorderColor = Line;
+            b3.BackColor = Paper2;
+            b3.ForeColor = Ink2;
+            b3.Font = new Font("Microsoft YaHei UI", 8F);
+            b3.Size = new Size(246, 28);
+            b3.Location = new Point(14, y + 42);
+            b3.Click += delegate { EmergencyGuide.ShowDialog(FindForm()); };
+            _sideStats.Controls.Add(b3);
+
             var note = new Label();
-            note.Text = "数据来自 Lenovo 官网，按序列号实时查询。\r\n固件永不自动执行。";
+            note.Text = "数据来自 Lenovo 官网，按序列号实时查询。" + Environment.NewLine + "固件永不自动执行。";
             note.Font = new Font("Microsoft YaHei UI", 7.5F);
             note.ForeColor = Ink3;
-            note.Location = new Point(14, y + 44);
+            note.Location = new Point(14, y + 78);
             note.Size = new Size(250, 34);
             _sideStats.Controls.Add(note);
         }
