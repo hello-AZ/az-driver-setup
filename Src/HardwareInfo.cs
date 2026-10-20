@@ -378,13 +378,32 @@ namespace DriverSetup
             }
             catch (Exception) { }
 
-            // 去重：同一面板在注册表里可能有多个枚举实例
-            var seen = new HashSet<string>();
+            // 去重：同一面板换过接口/扩展坞会在注册表里留下多个枚举实例。
+            // 但不能盲目按 PNP+尺寸合并——两台同型号外接屏长得完全一样，会被并成一台。
+            // 规则：同 key 时优先保留 Active 的（残留通常是 Active=false）；
+            //       若两条都 Active，那就是两台真屏，都留下。
+            var seen = new Dictionary<string, MonitorInfo>();
             var uniq = new List<MonitorInfo>();
             foreach (var m in s.Monitors)
             {
                 string key = m.PnpId + "|" + m.PrefWidth + "x" + m.PrefHeight + "|" + m.WidthCm + "x" + m.HeightCm;
-                if (seen.Add(key)) uniq.Add(m);
+                MonitorInfo exist;
+                if (seen.TryGetValue(key, out exist))
+                {
+                    if (!exist.Active && m.Active)
+                    {
+                        int at = uniq.IndexOf(exist);
+                        if (at >= 0) uniq[at] = m;
+                        seen[key] = m;
+                    }
+                    else if (exist.Active && m.Active)
+                    {
+                        uniq.Add(m);      // 两台都在用 → 真是两台同型号
+                    }
+                    continue;
+                }
+                seen[key] = m;
+                uniq.Add(m);
             }
             s.Monitors = uniq;
         }

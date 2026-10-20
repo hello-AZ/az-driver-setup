@@ -148,6 +148,7 @@ namespace DriverSetup
                 try { s = new PerfSampler(); }
                 catch (Exception ex) { err = ex.Message; }
 
+                bool scheduled = false;
                 try
                 {
                     if (IsDisposed || !IsHandleCreated) return;
@@ -167,8 +168,32 @@ namespace DriverSetup
                             _burnPanel.ShowLoading("传感器初始化失败：" + err);
                         }
                     });
+                    scheduled = true;
                 }
                 catch (Exception ex) { Log.Swallow(ex, "PressurePage:171"); }
+                finally
+                {
+                    // 兜底：句柄失效时上面的 return 会跳过 BeginInvoke，
+                    // _samplerLoading 卡在 true 之后，这一页永远显示"正在初始化传感器…"
+                    if (!scheduled)
+                    {
+                        // 没交出去的那份采样器要自己收掉，别漏 LHM 句柄
+                        if (s != null) { try { s.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "PressurePage 释放未用采样器"); } }
+
+                        bool recovered = false;
+                        try
+                        {
+                            if (!IsDisposed && IsHandleCreated)
+                            {
+                                BeginInvoke((Action)delegate { _samplerLoading = false; });
+                                recovered = true;
+                            }
+                        }
+                        catch (Exception ex) { Log.Swallow(ex, "PressurePage._samplerLoading 兜底复位"); }
+
+                        if (!recovered) _samplerLoading = false;
+                    }
+                }
             });
         }
 

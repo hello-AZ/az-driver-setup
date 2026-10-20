@@ -46,6 +46,7 @@ namespace DriverSetup
         private Button _btnDelete;
         private List<DriverEntry> _all = new List<DriverEntry>();
         private CheckBox _onlyDeletable;
+        private bool _busy;          // 防重入：切页/连点会重复起 pnputil
 
         public DriverCleanPage()
         {
@@ -234,6 +235,9 @@ namespace DriverSetup
 
         public void RefreshData()
         {
+            if (_busy) return;
+            _busy = true;
+
             Log.Write("[排查] 开始枚举驱动");
             if (_summary != null) { _summary.Text = "正在读取驱动列表…"; _summary.ForeColor = Ink3; }
 
@@ -244,18 +248,32 @@ namespace DriverSetup
                 try { list = EnumDrivers(); }
                 catch (Exception ex) { list = new List<DriverEntry>(); err = ex.Message; }
 
+                bool scheduled = false;
                 try
                 {
                     if (IsDisposed || !IsHandleCreated) return;
                     BeginInvoke((Action)delegate
                     {
-                        _all = list;
-                        Log.Write("[排查] 驱动枚举完成，共 " + list.Count + " 个驱动包" + (err != null ? "，错误：" + err : ""));
-                        if (err != null && _summary != null) _summary.Text = "读取失败：" + err;
-                        ApplyFilter();
+                        try
+                        {
+                            _all = list;
+                            Log.Write("[排查] 驱动枚举完成，共 " + list.Count + " 个驱动包" + (err != null ? "，错误：" + err : ""));
+                            if (err != null && _summary != null) _summary.Text = "读取失败：" + err;
+                            ApplyFilter();
+                        }
+                        finally
+                        {
+                            _busy = false;
+                        }
                     });
+                    scheduled = true;
                 }
                 catch (Exception ex) { Log.Swallow(ex, "DriverCleanPage:258"); }
+                finally
+                {
+                    // 句柄失效时上面的 return 会跳过 BeginInvoke，_busy 卡住就再也刷不出来
+                    if (!scheduled) _busy = false;
+                }
             });
         }
 

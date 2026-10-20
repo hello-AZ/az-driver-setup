@@ -23,6 +23,7 @@ namespace DriverSetup
 
         private Panel _list;
         private Label _summary;
+        private bool _busy;          // 防重入：切页会重复查 WMI
 
         /// <summary>常见 bugcheck 码 → 名称|说明</summary>
         private static readonly Dictionary<uint, string> Known = new Dictionary<uint, string>
@@ -112,6 +113,8 @@ namespace DriverSetup
         public void RefreshData()
         {
             if (_list == null) return;
+            if (_busy) return;
+            _busy = true;
 
             // 先把"正在读取"摆出来，再去后台查 WMI（扫日志要 2-5 秒）
             ShowLoading("正在读取蓝屏记录…");
@@ -122,12 +125,22 @@ namespace DriverSetup
                 try { cs = ReadCrashes(); } catch (Exception ex) { Log.Swallow(ex, "BlueScreenPage:122"); }
                 List<FileInfo> ds = ListDumps();
 
+                bool scheduled = false;
                 try
                 {
                     if (IsDisposed || !IsHandleCreated) return;
-                    BeginInvoke((Action)delegate { Render(cs, ds); });
+                    BeginInvoke((Action)delegate
+                    {
+                        try { Render(cs, ds); }
+                        finally { _busy = false; }
+                    });
+                    scheduled = true;
                 }
                 catch (Exception ex) { Log.Swallow(ex, "BlueScreenPage:130"); }
+                finally
+                {
+                    if (!scheduled) _busy = false;
+                }
             });
         }
 

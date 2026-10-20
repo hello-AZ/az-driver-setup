@@ -56,12 +56,14 @@ namespace DriverSetup
         public static Info Read()
         {
             var info = new Info();
+            bool inited = false;
             try
             {
                 if (nvmlInit_v2() != 0) return info;
+                inited = true;
 
                 IntPtr dev = IntPtr.Zero;
-                if (nvmlDeviceGetHandleByIndex_v2(0, ref dev) != 0) { try { nvmlShutdown(); } catch (Exception ex) { Log.Swallow(ex, "GpuInfo:64"); } return info; }
+                if (nvmlDeviceGetHandleByIndex_v2(0, ref dev) != 0) return info;
 
                 var buf = new byte[96];
                 if (nvmlDeviceGetName(dev, buf, (uint)buf.Length) == 0)
@@ -95,10 +97,13 @@ namespace DriverSetup
                     info.PowerDefaultW = pd / 1000.0;
 
                 info.Ok = true;
-
-                try { nvmlShutdown(); } catch (Exception ex) { Log.Swallow(ex, "GpuInfo:99"); }
             }
             catch (Exception ex) { Log.Swallow(ex, "GpuInfo:101"); }
+            finally
+            {
+                // init 成功就必须 shutdown，异常路径也一样（NVML 内部是引用计数）
+                if (inited) { try { nvmlShutdown(); } catch (Exception ex) { Log.Swallow(ex, "GpuInfo:shutdown"); } }
+            }
             return info;
         }
     }

@@ -23,6 +23,7 @@ namespace DriverSetup
         private static readonly Color Red = Theme.Red;
         private static readonly Color Blue = Theme.Accent;
         private static readonly Color Grey = Color.FromArgb(211, 200, 182);
+        private static readonly Color Purple = Theme.Purple;
 
         private Label _pageTitle;
         private Label _pageSub;
@@ -756,6 +757,7 @@ namespace DriverSetup
                 List<CompareResult> results = null;
                 string error = null;
                 bool unsupported = false;
+                bool uiScheduled = false;    // UI 回填是否已排队（决定 _busy 由谁复位）
                 string vendorName = null;
 
                 try
@@ -851,8 +853,35 @@ namespace DriverSetup
                             Cursor = Cursors.Default;
                         }
                     });
+                    uiScheduled = true;
                 }
                 catch (Exception ex) { Log.Swallow(ex, "MainForm:829"); }
+                finally
+                {
+                    // 兜底：上面两条路都可能逃掉（句柄失效时 return、BeginInvoke 本身抛异常），
+                    // 一旦 _busy 卡在 true，"重新检测"就永久失效，只能重启程序。
+                    if (!uiScheduled)
+                    {
+                        bool recovered = false;
+                        try
+                        {
+                            if (!IsDisposed && IsHandleCreated)
+                            {
+                                BeginInvoke((Action)delegate
+                                {
+                                    _busy = false;
+                                    _btnRefresh.Enabled = true;
+                                    Cursor = Cursors.Default;
+                                });
+                                recovered = true;
+                            }
+                        }
+                        catch (Exception ex2) { Log.Swallow(ex2, "MainForm._busy 兜底复位"); }
+
+                        // 窗体都没了的话，至少把标志清掉，避免下次进来被挡住
+                        if (!recovered) _busy = false;
+                    }
+                }
             });
         }
 
@@ -887,10 +916,11 @@ namespace DriverSetup
             int upd = results.Count(x => x.StatusRank == 1);
             int ok = results.Count(x => x.StatusRank == 0);
             int newer = results.Count(x => x.StatusRank == 3);
-            int miss = results.Count(x => x.StatusRank == 2 || x.StatusRank == 4);
+            int notInstalled = results.Count(x => x.StatusRank == 2);   // 未安装 / 待确认
+            int miss = results.Count(x => x.StatusRank == 4);           // 非本机配置
             int fw = results.Count(x => x.StatusRank == 5 || x.StatusRank == 6);
 
-            BuildStats(upd, ok, newer, miss, fw);
+            BuildStats(upd, ok, newer, miss, fw, notInstalled);
 
             if (_machine != null)
             {
@@ -934,7 +964,7 @@ namespace DriverSetup
             _listPanel.Controls.Add(l);
             _status.Text = "不支持的厂商";
             _machineInfo.Text = vendor;
-            BuildStats(0, 0, 0, 0, 0);
+            BuildStats(0, 0, 0, 0, 0, 0);
         }
 
         private void AddSection(string title, int count)
@@ -1145,7 +1175,7 @@ namespace DriverSetup
             return card;
         }
 
-        private void BuildStats(int upd, int ok, int newer, int miss, int fw)
+        private void BuildStats(int upd, int ok, int newer, int miss, int fw, int notInstalled)
         {
             _sideStats.Controls.Clear();
 
@@ -1159,6 +1189,7 @@ namespace DriverSetup
 
             int y = 34;
             AddStat("可更新", upd, Red, ref y);
+            AddStat("未安装 / 待确认", notInstalled, Purple, ref y);
             AddStat("已最新", ok, Green, ref y);
             AddStat("比官网新", newer, Blue, ref y);
             AddStat("非本机配置", miss, Orange, ref y);

@@ -151,7 +151,7 @@ namespace DriverSetup
         {
             try
             {
-                var searcher = new System.Management.ManagementObjectSearcher(
+                using var searcher = new System.Management.ManagementObjectSearcher(
                     "SELECT IdentifyingNumber, Name, Vendor FROM Win32_ComputerSystemProduct");
                 foreach (System.Management.ManagementObject mo in searcher.Get())
                 {
@@ -167,7 +167,7 @@ namespace DriverSetup
         {
             try
             {
-                var searcher = new System.Management.ManagementObjectSearcher(
+                using var searcher = new System.Management.ManagementObjectSearcher(
                     "SELECT Version, Name FROM Win32_ComputerSystemProduct");
                 foreach (System.Management.ManagementObject mo in searcher.Get())
                 {
@@ -187,7 +187,7 @@ namespace DriverSetup
             // 写成多字段会把整条查询弄成非法语句，异常被吞后返回空。
             try
             {
-                var searcher = new System.Management.ManagementObjectSearcher(
+                using var searcher = new System.Management.ManagementObjectSearcher(
                     "SELECT Vendor FROM Win32_ComputerSystemProduct");
                 foreach (System.Management.ManagementObject mo in searcher.Get())
                 {
@@ -199,7 +199,7 @@ namespace DriverSetup
 
             try
             {
-                var searcher = new System.Management.ManagementObjectSearcher(
+                using var searcher = new System.Management.ManagementObjectSearcher(
                     "SELECT Manufacturer FROM Win32_ComputerSystem");
                 foreach (System.Management.ManagementObject mo in searcher.Get())
                 {
@@ -315,7 +315,7 @@ namespace DriverSetup
             {
                 const string q = "SELECT DeviceName, DeviceID, DeviceClass, DriverProviderName, DriverVersion, DriverDate " +
                                  "FROM Win32_PnPSignedDriver";
-                var searcher = new System.Management.ManagementObjectSearcher(q);
+                using var searcher = new System.Management.ManagementObjectSearcher(q);
                 foreach (System.Management.ManagementObject mo in searcher.Get())
                 {
                     var d = new HwDevice();
@@ -354,13 +354,17 @@ namespace DriverSetup
                 case "串行总线接口":
                 case "电源管理": return new[] { "System" };
                 case "驱动程序": return new[] { "Monitor", "System" };
-                default: return new string[0];
+                // null（不是空数组）= 没见过的部件类别，调用方据此决定是否放弃厂商兜底
+                default: return null;
             }
         }
 
         private static bool ClassOk(HwDevice d, string partName)
         {
             var cls = ClassesFor(partName);
+            // null = 未知类别。走到这里说明硬件 ID 已经精确命中，放行是对的；
+            // 厂商兜底那条路已在 MatchByVendor 里单独拦截了。
+            if (cls == null) return true;
             if (cls.Length == 0) return true;
             foreach (var c in cls)
                 if (string.Equals(d.PnpClass, c, StringComparison.OrdinalIgnoreCase)) return true;
@@ -432,6 +436,15 @@ namespace DriverSetup
         public static List<HwDevice> MatchByVendor(List<HwDevice> devices, string driverName, string partName)
         {
             var hits = new List<HwDevice>();
+
+            // 没见过的部件类别：厂商兜底会把同厂商的设备全算命中（Intel 一家就有集显/网卡/蓝牙）。
+            // 宁愿这条显示"待确认"让用户自己判断，也不能瞎配。
+            if (ClassesFor(partName) == null)
+            {
+                Log.Add("[匹配] 未知部件类别，放弃厂商兜底：" + partName);
+                return hits;
+            }
+
             string name = driverName ?? "";
             foreach (var v in VendorKeys)
             {
@@ -495,20 +508,45 @@ namespace DriverSetup
             return 0;
         }
 
+        /// <summary>
+        /// 从版本串里剥出纯点分版本号，丢掉厂商名和芯片型号。
+        /// "RTL8852CE_6001.16.126.323" → "6001.16.126.323"
+        /// 否则芯片型号（8852）会被当成版本第一段，永远比本机"高"。
+        /// </summary>
+        private static string VersionPart(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            var ms = Regex.Matches(s, @"\d+(?:\.\d+)+");
+            if (ms.Count > 0) return ms[ms.Count - 1].Value;
+            return s;
+        }
+
         /// <summary>取官网版本串里最贴近本机的那一段比较结果</summary>
         public static int CompareVersions(string official, string local)
         {
             if (string.IsNullOrEmpty(official) || string.IsNullOrEmpty(local)) return int.MinValue;
 
-            string[] candidates = official.Split(new[] { ';', '/', '|', '，' }, StringSplitOptions.RemoveEmptyEntries);
+            // 官网版本串有两层结构：
+            //   ';' 分隔同一驱动的多个版本   "2.10.1072.3003;2.10.1072.3006"  → 该提示更新
+            //   '/' 分隔同一驱动的硬件变体   "RTL8852CE_x/RTL8852BE_y"        → 命中任一即最新
+            // 先剥掉厂商名/芯片型号，再逐变体比较；只要存在更高的版本就不能判"已最新"。
+            string[] candidates = official.Split(new[] { ';', '|', '，' }, StringSplitOptions.RemoveEmptyEntries);
             int best = int.MinValue;
+            bool matched = false;
+
             foreach (var c in candidates)
             {
-                int r = CompareNumArrays(Nums(c), Nums(local));
-                if (r == int.MinValue) continue;
-                if (r == 0) return 0;                  // 任意一段相同即可视为相同
-                if (best == int.MinValue || r > best) best = r;
+                foreach (var v in c.Split('/'))
+                {
+                    int r = CompareNumArrays(Nums(VersionPart(v)), Nums(local));
+                    if (r == int.MinValue) continue;
+                    if (r == 0) matched = true;
+                    if (best == int.MinValue || r > best) best = r;
+                }
             }
+
+            // 命中某个变体，且没有更高版本 → 已最新
+            if (matched && (best == int.MinValue || best <= 0)) return 0;
             return best;
         }
 
@@ -517,7 +555,7 @@ namespace DriverSetup
         {
             try
             {
-                var s = new System.Management.ManagementObjectSearcher(
+                using var s = new System.Management.ManagementObjectSearcher(
                     "SELECT SMBIOSBIOSVersion, Version FROM Win32_BIOS");
                 foreach (System.Management.ManagementObject mo in s.Get())
                 {
@@ -623,14 +661,16 @@ namespace DriverSetup
                     continue;
                 }
 
-                // 多台设备命中时，优先选「版本与官网一致」的那台（避免同厂误配）
+                // 多台设备命中时按"最需要更新"的那台判定：
+                // 以前是优先选「版本与官网一致」的设备，等于挑最好的那台报平安，
+                // 另一台旧驱动永远不提示。现在取差异最大（官方更高）的那台作为代表。
                 HwDevice best = hits[0];
-                int bestScore = 99;
+                int worst = int.MinValue;
                 foreach (var h in hits)
                 {
                     int c = CompareVersions(d.Version, h.Version);
-                    int score = c == 0 ? 0 : (c == -1 ? 1 : 2);
-                    if (score < bestScore) { bestScore = score; best = h; }
+                    if (c == int.MinValue) continue;
+                    if (worst == int.MinValue || c > worst) { worst = c; best = h; }
                 }
 
                 r.MatchedDevice = best.Name;
