@@ -53,7 +53,7 @@ namespace DriverSetup
 
         public static void Dispose()
         {
-            try { if (_cls != null) _cls.Dispose(); } catch { }
+            try { if (_cls != null) _cls.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "LenovoWmi:56"); }
             _cls = null;
             _tried = false;
         }
@@ -102,11 +102,11 @@ namespace DriverSetup
                             int n = Convert.ToInt32(v);
                             if (n > 0) return n;
                         }
-                        catch { }
+                        catch (Exception ex) { Log.Swallow(ex, "LenovoWmi:105"); }
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "LenovoWmi:109"); }
             return -1;
         }
     }

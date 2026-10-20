@@ -323,14 +323,14 @@ namespace DriverSetup
                 int v;
                 if (int.TryParse(t, out v) && v >= 0 && v < KeyboardLayouts.Names.Length) return v;
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "TestPage:326"); }
             return 1;   // 默认 102 联想式
         }
 
         private static void SaveLayoutPref(int id)
         {
             try { System.IO.File.WriteAllText(LayoutPrefPath, id.ToString()); }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "TestPage:333"); }
         }
 
         public void ResetKeyboard()

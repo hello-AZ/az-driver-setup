@@ -108,7 +108,7 @@ namespace DriverSetup
                 // 不校验长度就会把半截文件当成品，后面装出半套驱动
                 if (total > 0 && got != total)
                 {
-                    try { File.Delete(tmp); } catch { }
+                    try { File.Delete(tmp); } catch (Exception ex) { Log.Swallow(ex, "InstallEngine:111"); }
                     throw new IOException(string.Format(
                         "下载不完整：收到 {0} / {1} 字节（{2:P1}）", got, total, (double)got / total));
                 }

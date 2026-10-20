@@ -80,9 +80,9 @@ namespace DriverSetup
             catch (Exception ex) { sb.AppendLine("EX " + ex); }
             finally
             {
-                try { gb.Dispose(); } catch { }
-                try { ps.Dispose(); } catch { }
-                try { f.Close(); } catch { }
+                try { gb.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "Program:83"); }
+                try { ps.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "Program:84"); }
+                try { f.Close(); } catch (Exception ex) { Log.Swallow(ex, "Program:85"); }
             }
             System.IO.File.WriteAllText(
                 System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gpu-test.txt"), sb.ToString());
@@ -166,7 +166,7 @@ namespace DriverSetup
                     }
                 }
                 catch (Exception ex) { sb.AppendLine("ERR " + ex); }
-                try { c.Close(); } catch { }
+                try { c.Close(); } catch (Exception ex) { Log.Swallow(ex, "Program:169"); }
                 System.IO.File.WriteAllText(
                     System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "lhm-test.txt"), sb.ToString());
                 return;
@@ -207,7 +207,7 @@ namespace DriverSetup
                     if (st != null) AppIcon = new Icon(st);   // 含全部尺寸，系统自选
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "Program:210"); }
 
             Application.SetCompatibleTextRenderingDefault(false);
 

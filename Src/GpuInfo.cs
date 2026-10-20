@@ -61,7 +61,7 @@ namespace DriverSetup
                 if (nvmlInit_v2() != 0) return info;
 
                 IntPtr dev = IntPtr.Zero;
-                if (nvmlDeviceGetHandleByIndex_v2(0, ref dev) != 0) { try { nvmlShutdown(); } catch { } return info; }
+                if (nvmlDeviceGetHandleByIndex_v2(0, ref dev) != 0) { try { nvmlShutdown(); } catch (Exception ex) { Log.Swallow(ex, "GpuInfo:64"); } return info; }
 
                 var buf = new byte[96];
                 if (nvmlDeviceGetName(dev, buf, (uint)buf.Length) == 0)
@@ -96,9 +96,9 @@ namespace DriverSetup
 
                 info.Ok = true;
 
-                try { nvmlShutdown(); } catch { }
+                try { nvmlShutdown(); } catch (Exception ex) { Log.Swallow(ex, "GpuInfo:99"); }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "GpuInfo:101"); }
             return info;
         }
     }

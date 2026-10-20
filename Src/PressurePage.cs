@@ -168,7 +168,7 @@ namespace DriverSetup
                         }
                     });
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "PressurePage:171"); }
             });
         }
 

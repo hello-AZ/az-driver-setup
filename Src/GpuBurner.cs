@@ -73,7 +73,7 @@ float4 PSMain(VSOut i) : SV_TARGET
             var t = _thread;
             if (t != null)
             {
-                try { if (!t.Join(2000)) { } } catch { }
+                try { if (!t.Join(2000)) { } } catch (Exception ex) { Log.Swallow(ex, "GpuBurner:76"); }
             }
             _thread = null;
         }
@@ -155,7 +155,7 @@ float4 PSMain(VSOut i) : SV_TARGET
                 IsRunning = false;
                 _running = false;
 
-                if (ctx != null) { try { ctx.ClearState(); ctx.Flush(); } catch { } }
+                if (ctx != null) { try { ctx.ClearState(); ctx.Flush(); } catch (Exception ex) { Log.Swallow(ex, "GpuBurner:158"); } }
                 if (rtv != null) rtv.Dispose();
                 if (backBuffer != null) backBuffer.Dispose();
                 if (vs != null) vs.Dispose();

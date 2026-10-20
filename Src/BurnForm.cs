@@ -286,7 +286,7 @@ namespace DriverSetup
         public void SetSampler(PerfSampler shared)
         {
             if (shared == null) return;
-            if (_ownsSampler && _sampler != null) { try { _sampler.Dispose(); } catch { } }
+            if (_ownsSampler && _sampler != null) { try { _sampler.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "BurnForm:289"); } }
             _sampler = shared;
             _ownsSampler = false;
             // 不在这里 Probe：_cpu.Update() 要读 MSR，会卡 UI 线程。
@@ -298,14 +298,14 @@ namespace DriverSetup
         public void StopAllBurn()
         {
             StopBurn();
-            try { if (_burner != null) _burner.Stop(); } catch { }
+            try { if (_burner != null) _burner.Stop(); } catch (Exception ex) { Log.Swallow(ex, "BurnForm:301"); }
         }
 
         private void StopBurn()
         {
             Log.Write("[CPU烤机] 停止");
             _running = false;
-            try { _burner.Stop(); } catch { }
+            try { _burner.Stop(); } catch (Exception ex) { Log.Swallow(ex, "BurnForm:308"); }
             if (_timer != null) _timer.Stop();
             if (_btnStart != null) _btnStart.Enabled = true;
             if (_btnStop != null) _btnStop.Enabled = false;

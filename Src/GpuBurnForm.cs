@@ -76,7 +76,7 @@ namespace DriverSetup
             FormClosing += delegate
             {
                 if (_timer != null) _timer.Stop();
-                try { _burner.Stop(); } catch { }
+                try { _burner.Stop(); } catch (Exception ex) { Log.Swallow(ex, "GpuBurnForm:79"); }
             };
         }
 
@@ -99,7 +99,7 @@ namespace DriverSetup
                     if (!double.IsNaN(p.GpuClock)) s += " · " + p.GpuClock.ToString("F0") + "MHz";
                     if (!double.IsNaN(p.GpuPower)) s += " · " + p.GpuPower.ToString("F0") + "W";
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "GpuBurnForm:102"); }
             }
             s += "   （Esc 停止）";
             _info.Text = s;

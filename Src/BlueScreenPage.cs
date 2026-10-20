@@ -119,7 +119,7 @@ namespace DriverSetup
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
                 List<CrashInfo> cs = new List<CrashInfo>();
-                try { cs = ReadCrashes(); } catch { }
+                try { cs = ReadCrashes(); } catch (Exception ex) { Log.Swallow(ex, "BlueScreenPage:122"); }
                 List<FileInfo> ds = ListDumps();
 
                 try
@@ -127,7 +127,7 @@ namespace DriverSetup
                     if (IsDisposed || !IsHandleCreated) return;
                     BeginInvoke((Action)delegate { Render(cs, ds); });
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "BlueScreenPage:130"); }
             });
         }
 
@@ -357,7 +357,7 @@ namespace DriverSetup
 
                         list.Add(info);
                     }
-                    catch { }
+                    catch (Exception ex) { Log.Swallow(ex, "BlueScreenPage:360"); }
                 }
             }
             return list;
@@ -375,7 +375,7 @@ namespace DriverSetup
                 foreach (var f in new DirectoryInfo(dir).GetFiles("*.dmp"))
                     list.Add(f);
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "BlueScreenPage:378"); }
             return list;
         }
     }

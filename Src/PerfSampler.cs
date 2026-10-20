@@ -39,6 +39,7 @@ namespace DriverSetup
         private IHardware _cpu;
         private IHardware _gpu;
         private bool _gpuDumped;
+        private volatile bool _disposed;
         private PerformanceCounter _perfPct;
         private PerformanceCounter _loadPct;
         private int _baseMhz = 2200;
@@ -164,7 +165,7 @@ namespace DriverSetup
                     {
                         _gpu = hw;
                         // 枚举到就算检测到，不等第一次采样（否则状态行一直显示"未检测到"）
-                        try { GpuName = hw.Name; GpuOk = true; } catch { }
+                        try { GpuName = hw.Name; GpuOk = true; } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:167"); }
                     }
 
                     // 风扇可能在主板或嵌入式控制器下
@@ -221,6 +222,10 @@ namespace DriverSetup
         public PerfSample Sample(double sec)
         {
             HasSampled = true;
+
+            // 窗口关闭时 Dispose 会 _comp.Close()，采样线程可能正好在跑。
+            // 用标志快速退出，避免往已释放的对象里读。
+            if (_disposed) return new PerfSample();
             var p = new PerfSample { Sec = sec, Time = DateTime.Now };
 
             // ---- CPU（LHM）----
@@ -273,7 +278,7 @@ namespace DriverSetup
 
             if (_loadPct != null)
             {
-                try { p.CpuLoad = _loadPct.NextValue(); } catch { }
+                try { p.CpuLoad = _loadPct.NextValue(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:276"); }
             }
 
             // 每核频率
@@ -309,7 +314,7 @@ namespace DriverSetup
             {
                 _lastFanQuery = sec;
                 int lf = 0;
-                try { lf = LenovoWmi.GetFanSpeed(); } catch { }
+                try { lf = LenovoWmi.GetFanSpeed(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:312"); }
                 if (lf > 0) _lenovoFan = lf;
             }
             if (_lenovoFan > 0) p.FanRpm = _lenovoFan;
@@ -393,11 +398,12 @@ namespace DriverSetup
 
         public void Dispose()
         {
-            try { if (_comp != null) _comp.Close(); } catch { }
-            try { if (_perfPct != null) _perfPct.Dispose(); } catch { }
-            try { if (_loadPct != null) _loadPct.Dispose(); } catch { }
+            _disposed = true;
+            try { if (_comp != null) _comp.Close(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:396"); }
+            try { if (_perfPct != null) _perfPct.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:397"); }
+            try { if (_loadPct != null) _loadPct.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:398"); }
             if (_corePerf != null)
-                foreach (var pc in _corePerf) { try { if (pc != null) pc.Dispose(); } catch { } }
+                foreach (var pc in _corePerf) { try { if (pc != null) pc.Dispose(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:400"); } }
         }
     }
 
@@ -440,12 +446,12 @@ namespace DriverSetup
         {
             if (_cts != null)
             {
-                try { _cts.Cancel(); } catch { }
+                try { _cts.Cancel(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:443"); }
                 _cts = null;
             }
             foreach (var t in _threads)
             {
-                try { if (!t.Join(300)) { } } catch { }
+                try { if (!t.Join(300)) { } } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:448"); }
             }
             _threads.Clear();
         }

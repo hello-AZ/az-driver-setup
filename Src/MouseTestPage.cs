@@ -301,14 +301,14 @@ namespace DriverSetup
                 dev[0].Target = Handle;
                 RegisterRawInputDevices(dev, 1, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICE)));
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "MouseTestPage:304"); }
         }
 
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_INPUT)
             {
-                try { ParseInput(m.LParam); } catch { }
+                try { ParseInput(m.LParam); } catch (Exception ex) { Log.Swallow(ex, "MouseTestPage:311"); }
             }
             base.WndProc(ref m);
         }

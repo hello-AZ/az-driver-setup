@@ -316,7 +316,7 @@ namespace DriverSetup
             AddRow(c, ref i, "显存", g != null ? g.VramText : "—", null);
 
             GpuDetail.Info spec = null;
-            try { spec = GpuDetail.Read(); } catch { }
+            try { spec = GpuDetail.Read(); } catch (Exception ex) { Log.Swallow(ex, "ConfigPage:319"); }
             if (spec != null && spec.Ok)
             {
                 string busTxt = spec.BusWidth > 0

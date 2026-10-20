@@ -16,6 +16,7 @@ namespace DriverSetup
         private const uint RIDI_DEVICENAME = 0x20000007;
 
         private const uint RIDEV_INPUTSINK = 0x00000100;
+        private const uint RIDEV_REMOVE = 0x00000001;
         private const uint HID_USAGE_PAGE_GENERIC = 0x01;
         private const uint HID_USAGE_GENERIC_KEYBOARD = 0x06;
 
@@ -78,6 +79,26 @@ namespace DriverSetup
             dev[0].Flags = RIDEV_INPUTSINK;     // 窗口不在前台也能收到
             dev[0].Target = hwnd;
             Registered = RegisterRawInputDevices(dev, 1, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICE)));
+        }
+
+        /// <summary>
+        /// 注销全局监听。窗口销毁前必须调用：
+        /// 注册留着会指向已失效的 hwnd，重启程序会不断累积。
+        /// </summary>
+        public void Unregister()
+        {
+            if (!Registered) return;
+            try
+            {
+                var dev = new RAWINPUTDEVICE[1];
+                dev[0].UsagePage = (ushort)HID_USAGE_PAGE_GENERIC;
+                dev[0].Usage = (ushort)HID_USAGE_GENERIC_KEYBOARD;
+                dev[0].Flags = RIDEV_REMOVE;
+                dev[0].Target = IntPtr.Zero;
+                RegisterRawInputDevices(dev, 1, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICE)));
+            }
+            catch (Exception ex) { Log.Swallow(ex, "RawKeyboard.Unregister"); }
+            Registered = false;
         }
 
         /// <summary>在 WndProc 里调用；返回 true 表示是本类消费的消息</summary>

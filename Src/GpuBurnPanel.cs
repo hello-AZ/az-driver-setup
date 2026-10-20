@@ -25,6 +25,7 @@ namespace DriverSetup
         private Label _info;
         private Label _time;
         private Button _btnStart, _btnStop, _btnReset;
+        private int _uiTick;
         private TableLayoutPanel _stats;
         private int _sec;
 
@@ -43,7 +44,7 @@ namespace DriverSetup
             Disposed += delegate
             {
                 if (_timer != null) _timer.Stop();
-                try { _burner.Stop(); } catch { }
+                try { _burner.Stop(); } catch (Exception ex) { Log.Swallow(ex, "GpuBurnPanel:46"); }
             };
         }
 
@@ -213,7 +214,7 @@ namespace DriverSetup
         private void StopBurn()
         {
             _timer.Stop();
-            try { _burner.Stop(); } catch { }
+            try { _burner.Stop(); } catch (Exception ex) { Log.Swallow(ex, "GpuBurnPanel:216"); }
             _btnStart.Enabled = true;
             _btnStop.Enabled = false;
             if (_chart != null && _chart.Data.Count > 0)
@@ -232,9 +233,16 @@ namespace DriverSetup
             try { p = _sampler.Sample(_sec); }
             catch { return; }
 
-            _chart.Data.Add(p);
-            _chart.Invalidate();
-            RefreshStats();
+            _chart.Data.Add(p);   // 采样保持每秒，数据不丢
+
+            // 重绘降频：GPU 满载时 GDI+ 重绘会和 D3D 抢资源，
+            // 每秒刷一次会让画面发顿。曲线和统计每 2 秒刷一次，状态行照旧每秒更新。
+            _uiTick++;
+            if (_uiTick % 2 == 0)
+            {
+                _chart.Invalidate();
+                RefreshStats();
+            }
 
             string s = "正在烤机";
             if (_burner.Fps > 0) s += " · " + _burner.Fps.ToString("F0") + " FPS";

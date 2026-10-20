@@ -100,7 +100,7 @@ namespace DriverSetup
                 Invalidate();
                 Application.DoEvents();   // 立刻重绘，不然后面还在算，界面不动
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "SplashForm:103"); }
         }
     }
 }

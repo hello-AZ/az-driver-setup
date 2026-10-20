@@ -50,7 +50,7 @@ namespace DriverSetup
                 if (EnumDisplaySettings(_screen.DeviceName, -1, ref dm))
                     _nominal = dm.dmDisplayFrequency;
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "RefreshTestForm:53"); }
 
             KeyDown += delegate (object s, KeyEventArgs e)
             {
@@ -154,7 +154,7 @@ namespace DriverSetup
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             _running = false;
-            try { Cursor.Show(); } catch { }
+            try { Cursor.Show(); } catch (Exception ex) { Log.Swallow(ex, "RefreshTestForm:157"); }
             base.OnFormClosing(e);
         }
 

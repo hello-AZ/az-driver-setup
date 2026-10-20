@@ -255,7 +255,7 @@ namespace DriverSetup
                         ApplyFilter();
                     });
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "DriverCleanPage:258"); }
             });
         }
 
@@ -320,7 +320,7 @@ namespace DriverSetup
                 foreach (DataGridViewRow r in _dgv.Rows)
                     if (r.Cells["sel"].Value != null && (bool)r.Cells["sel"].Value) sel++;
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "DriverCleanPage:323"); }
 
             int third = _all.Count(d => !d.IsMicrosoft);
             _summary.Text = "共 " + _all.Count + " 个驱动包（第三方 " + third + " 个）" +

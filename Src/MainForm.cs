@@ -76,6 +76,12 @@ namespace DriverSetup
             BuildUi();
             // Load 阶段设的尺寸会被 WinForms 内部重置，挪到 Shown（窗口显示完，没人再动）
             Load += delegate { RefreshAll(); };
+
+            // 退出前注销全局键盘监听，否则注册会指向失效的 hwnd 并不断累积
+            FormClosed += delegate
+            {
+                try { if (_raw != null) _raw.Unregister(); } catch (Exception ex) { Log.Swallow(ex, "MainForm.FormClosed"); }
+            };
         }
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
@@ -826,7 +832,7 @@ namespace DriverSetup
                         }
                     });
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "MainForm:829"); }
             });
         }
 
@@ -1545,7 +1551,7 @@ namespace DriverSetup
                         DateTime.Now.ToString("HH:mm:ss.fff") + "  " + line + " [T" +
                         System.Threading.Thread.CurrentThread.ManagedThreadId + "]" + Environment.NewLine);
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "MainForm:1548"); }
             }
         }
 
@@ -1557,7 +1563,7 @@ namespace DriverSetup
                 _logBox.SelectionStart = _logBox.TextLength;
                 _logBox.ScrollToCaret();
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "MainForm:1560"); }
 
             // 同时落盘：界面看不到的错误也有据可查
             try
@@ -1566,7 +1572,7 @@ namespace DriverSetup
                     System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug.log"),
                     DateTime.Now.ToString("HH:mm:ss.fff") + "  " + line + Environment.NewLine);
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "MainForm:1569"); }
         }
     }
 }
