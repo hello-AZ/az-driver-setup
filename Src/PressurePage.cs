@@ -130,12 +130,43 @@ namespace DriverSetup
         }
 
         /// <summary>由主窗口在切到本页时调用：初始化采样器</summary>
+        private bool _samplerLoading;
+
         public void EnsureSampler()
         {
-            if (_sampler != null) return;
-            _sampler = new PerfSampler();
-            if (_burnPanel != null) _burnPanel.SetSampler(_sampler);
-            if (_gpuPanel != null) _gpuPanel.SetSampler(_sampler);
+            if (_sampler != null || _samplerLoading) return;
+            _samplerLoading = true;
+
+            // 先把提示摆出来，别让界面僵在那儿
+            if (_burnPanel != null) _burnPanel.ShowLoading("正在初始化传感器…（首次约 3-6 秒，之后秒开）");
+
+            System.Threading.Tasks.Task.Run((Action)delegate
+            {
+                PerfSampler s = null;
+                string err = null;
+                try { s = new PerfSampler(); }
+                catch (Exception ex) { err = ex.Message; }
+
+                try
+                {
+                    if (IsDisposed || !IsHandleCreated) return;
+                    BeginInvoke((Action)delegate
+                    {
+                        _samplerLoading = false;
+                        if (s != null)
+                        {
+                            _sampler = s;
+                            if (_burnPanel != null) _burnPanel.SetSampler(s);
+                            if (_gpuPanel != null) _gpuPanel.SetSampler(s);
+                        }
+                        else if (_burnPanel != null)
+                        {
+                            _burnPanel.ShowLoading("传感器初始化失败：" + err);
+                        }
+                    });
+                }
+                catch { }
+            });
         }
 
         /// <summary>停止一切负载（切走分页时调用）</summary>

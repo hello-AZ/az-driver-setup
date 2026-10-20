@@ -34,7 +34,9 @@ namespace DriverSetup
         private const ushort RI_MOUSE_MIDDLE_BUTTON_DOWN = 0x0010;
         private const ushort RI_MOUSE_MIDDLE_BUTTON_UP = 0x0020;
         private const ushort RI_MOUSE_BUTTON_4_DOWN = 0x0040;
+        private const ushort RI_MOUSE_BUTTON_4_UP = 0x0080;
         private const ushort RI_MOUSE_BUTTON_5_DOWN = 0x0100;
+        private const ushort RI_MOUSE_BUTTON_5_UP = 0x0200;
         private const ushort RI_MOUSE_WHEEL = 0x0400;
 
         [StructLayout(LayoutKind.Sequential)]
@@ -343,7 +345,9 @@ namespace DriverSetup
                 Check(f, RI_MOUSE_MIDDLE_BUTTON_DOWN, 2, true);
                 Check(f, RI_MOUSE_MIDDLE_BUTTON_UP, 2, false);
                 Check(f, RI_MOUSE_BUTTON_4_DOWN, 3, true);
+                Check(f, RI_MOUSE_BUTTON_4_UP, 3, false);
                 Check(f, RI_MOUSE_BUTTON_5_DOWN, 4, true);
+                Check(f, RI_MOUSE_BUTTON_5_UP, 4, false);
 
                 // 轨迹（把相对位移累积成一条走线）
                 if (lx != 0 || ly != 0)

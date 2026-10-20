@@ -3,6 +3,9 @@ Src/bin/
 Src/obj/
 App/*.exe
 App/*.dll
+App/*.deps.json
+App/*.runtimeconfig.json
+App/runtimes/
 App/*.pdb
 
 # ── 运行时状态（本机数据，不该进仓库）──

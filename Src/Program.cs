@@ -172,13 +172,8 @@ namespace DriverSetup
                 return;
             }
 
-            bool burnMode = Environment.GetEnvironmentVariable("DRV_START_BURN") == "1" ||
-                            (args != null && Array.IndexOf(args, "--burn") >= 0);
-            bool burnAuto = Environment.GetEnvironmentVariable("DRV_BURN_AUTO") == "1" ||
-                            (args != null && Array.IndexOf(args, "--burn-auto") >= 0);
-            if (burnMode)
-            {
-                // --page N 指定起始分页（提权后环境变量会丢，所以走参数）
+            // --page N 指定起始分页（提权后环境变量会丢，所以走参数）
+            // 必须放在所有分支之前：原来它写在 --burn 分支里，普通启动时参数被忽略
             if (args != null)
             {
                 int pi = Array.IndexOf(args, "--page");
@@ -186,7 +181,13 @@ namespace DriverSetup
                     Environment.SetEnvironmentVariable("DRV_START_PAGE", args[pi + 1]);
             }
 
-            Application.EnableVisualStyles();
+            bool burnMode = Environment.GetEnvironmentVariable("DRV_START_BURN") == "1" ||
+                            (args != null && Array.IndexOf(args, "--burn") >= 0);
+            bool burnAuto = Environment.GetEnvironmentVariable("DRV_BURN_AUTO") == "1" ||
+                            (args != null && Array.IndexOf(args, "--burn-auto") >= 0);
+            if (burnMode)
+            {
+                Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
                 using (var bf = new BurnHostForm())

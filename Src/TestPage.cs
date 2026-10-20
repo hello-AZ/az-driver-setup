@@ -113,7 +113,7 @@ namespace DriverSetup
             cbLayout.ForeColor = Ink2;
             cbLayout.Font = new Font("Microsoft YaHei UI", 8.5F);
             cbLayout.Size = new Size(184, 26);
-            cbLayout.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            cbLayout.Margin = new Padding(6, 6, 0, 0);
             foreach (var n in KeyboardLayouts.Names) cbLayout.Items.Add(n);
 
             int saved = LoadLayoutPref();
@@ -127,16 +127,20 @@ namespace DriverSetup
             btnReset.BackColor = Paper2;
             btnReset.ForeColor = Ink;
             btnReset.Font = new Font("Microsoft YaHei UI", 8.5F);
-            btnReset.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnReset.Location = new Point(bar.Width - 100, 5);
+            btnReset.Margin = new Padding(6, 5, 10, 0);
             btnReset.Click += delegate { if (_kb != null) _kb.ResetAll(); };
-            bar.Controls.Add(btnReset);
-            bar.Controls.Add(cbLayout);
-            bar.Resize += delegate
-            {
-                btnReset.Location = new Point(bar.Width - btnReset.Width - 10, 5);
-                cbLayout.Location = new Point(bar.Width - btnReset.Width - cbLayout.Width - 20, 6);
-            };
+
+            // 靠右自动排列：不手算坐标，容器多宽都自己贴边
+            var rightBar = new FlowLayoutPanel();
+            rightBar.Dock = DockStyle.Right;
+            rightBar.FlowDirection = FlowDirection.RightToLeft;
+            rightBar.WrapContents = false;
+            rightBar.AutoSize = true;
+            rightBar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            rightBar.BackColor = Paper2;
+            rightBar.Controls.Add(btnReset);   // RightToLeft: 先加的排最右
+            rightBar.Controls.Add(cbLayout);
+            bar.Controls.Add(rightBar);
 
             cbLayout.SelectedIndexChanged += delegate
             {

@@ -38,6 +38,7 @@ namespace DriverSetup
         private Computer _comp;
         private IHardware _cpu;
         private IHardware _gpu;
+        private bool _gpuDumped;
         private PerformanceCounter _perfPct;
         private PerformanceCounter _loadPct;
         private int _baseMhz = 2200;
@@ -49,6 +50,8 @@ namespace DriverSetup
 
         public bool IsAdmin { get; private set; }
         public bool CpuTempAvailable { get; private set; }
+        /// <summary>是否已经跑过至少一次采样（未采样时不能断言温度读不到）</summary>
+        public bool HasSampled { get; private set; }
         public bool GpuOk { get; private set; }
         public string CpuName { get; private set; } = "CPU";
         public string GpuName { get; private set; } = "GPU";
@@ -126,12 +129,43 @@ namespace DriverSetup
                 };
                 _comp.Open();
 
+                // 初始化后立刻把 GPU 传感器名落盘，方便核对命名（不依赖是否开始烤机）
+                try
+                {
+                    var sb = new System.Text.StringBuilder();
+                    foreach (var hw in _comp.Hardware)
+                    {
+                        sb.AppendLine("== " + hw.HardwareType + " : " + hw.Name);
+                        hw.Update();
+                        foreach (var s in hw.Sensors)
+                            sb.AppendLine("   " + s.SensorType + " | " + s.Name + " = " + (s.Value.HasValue ? s.Value.Value.ToString() : "null"));
+                    }
+                    System.IO.File.WriteAllText(
+                        System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gpu-sensors.txt"),
+                        sb.ToString());
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        System.IO.File.WriteAllText(
+                            System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gpu-sensors.txt"),
+                            "dump 失败: " + ex);
+                    }
+                    catch { }
+                }
+
                 foreach (var hw in _comp.Hardware)
                 {
                     if (hw.HardwareType == HardwareType.Cpu) _cpu = hw;
                     else if (hw.HardwareType == HardwareType.GpuNvidia ||
                              hw.HardwareType == HardwareType.GpuAmd ||
-                             hw.HardwareType == HardwareType.GpuIntel) _gpu = hw;
+                             hw.HardwareType == HardwareType.GpuIntel)
+                    {
+                        _gpu = hw;
+                        // 枚举到就算检测到，不等第一次采样（否则状态行一直显示"未检测到"）
+                        try { GpuName = hw.Name; GpuOk = true; } catch { }
+                    }
 
                     // 风扇可能在主板或嵌入式控制器下
                     try
@@ -186,6 +220,7 @@ namespace DriverSetup
 
         public PerfSample Sample(double sec)
         {
+            HasSampled = true;
             var p = new PerfSample { Sec = sec, Time = DateTime.Now };
 
             // ---- CPU（LHM）----
@@ -219,6 +254,7 @@ namespace DriverSetup
                         }
                     }
                     p.CpuTemp = !double.IsNaN(coreMax) ? coreMax : coreAvg;
+                    CpuTempAvailable = !double.IsNaN(p.CpuTemp);   // 状态行靠它决定是否提示"需管理员"
                     if (!double.IsNaN(c1)) p.CpuClock = c1;
                 }
                 catch { }
@@ -306,6 +342,23 @@ namespace DriverSetup
                 try
                 {
                     _gpu.Update();
+
+                    // 第一次采样时把所有 GPU 传感器名 dump 出来，便于核对命名
+                    if (!_gpuDumped)
+                    {
+                        _gpuDumped = true;
+                        try
+                        {
+                            var sb = new System.Text.StringBuilder();
+                            foreach (var ss in _gpu.Sensors)
+                                sb.AppendLine(ss.SensorType + " | " + ss.Name);
+                            System.IO.File.WriteAllText(
+                                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gpu-sensors.txt"),
+                                sb.ToString());
+                        }
+                        catch { }
+                    }
+
                     foreach (var s in _gpu.Sensors)
                     {
                         if (s.Value == null) continue;

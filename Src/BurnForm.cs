@@ -252,8 +252,11 @@ namespace DriverSetup
             string s = "CPU：" + _sampler.CpuName + "   ·   GPU：" + (_sampler.GpuOk ? _sampler.GpuName : "未检测到");
             s += "   ·   权限：" + (_sampler.IsAdmin ? "管理员" : "普通用户（CPU 温度不可读）");
             s += "   ·   风扇由 EC 管理，Windows 侧读不到";
-            if (!_sampler.CpuTempAvailable)
-                s += "   ·   CPU 温度需管理员权限";
+            // 没采样过不等于没权限：这时什么都不提
+            if (_sampler.HasSampled && !_sampler.CpuTempAvailable)
+                s += "   ·   读不到 CPU 温度（需要以管理员身份运行）";
+            else if (!_sampler.HasSampled)
+                s += "   ·   按「开始烤机」后读取传感器";
             _lblState.Text = s;
         }
 
@@ -273,13 +276,20 @@ namespace DriverSetup
         }
 
         /// <summary>延迟注入采样器（切到本页时才初始化 LHM）</summary>
+        /// <summary>外部提示（例如传感器还在初始化）</summary>
+        public void ShowLoading(string text)
+        {
+            if (_lblState != null) _lblState.Text = text;
+        }
+
         public void SetSampler(PerfSampler shared)
         {
             if (shared == null) return;
             if (_ownsSampler && _sampler != null) { try { _sampler.Dispose(); } catch { } }
             _sampler = shared;
             _ownsSampler = false;
-            try { _sampler.Probe(); } catch { }
+            // 不在这里 Probe：_cpu.Update() 要读 MSR，会卡 UI 线程。
+            // 第一次 Sample 时自然填充，状态行随之更新。
             UpdateStateText();
         }
 
@@ -301,6 +311,8 @@ namespace DriverSetup
 
         private void Tick()
         {
+            UpdateStateText();   // 采样后同步状态行（GPU/温度可读性会变）
+
             if (_sampler == null) return;
             _sec += 1.0;
             var p = _sampler.Sample(_sec);
