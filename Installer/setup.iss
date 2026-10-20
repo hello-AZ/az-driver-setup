@@ -3,7 +3,7 @@
 ; 产物：..\Dist\Installer\AZ-DriverSetup-Setup-<版本>.exe
 
 #define MyAppName "AZ 驱动懒人安装"
-#define MyAppVersion "1.1.1.4"
+#define MyAppVersion "1.1.1.5"
 #define MyAppPublisher "AZ"
 #define MyAppExeName "DriverSetup.exe"
 #define MyAppId "{{8F3A2B1C-4D5E-4F6A-9B7C-1D2E3F4A5B6C}"
@@ -32,8 +32,8 @@ SetupIconFile=..\Src\app.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 UninstallDisplayName={#MyAppName}
 
-; 只支持 Win10 及以上（Win10 尚未适配，但允许安装）
-MinVersion=10.0
+; Windows 10 1809 (17763) 及以上：更早的版本 pnputil 参数与 DPI 支持不确定
+MinVersion=10.0.17763
 
 [Languages]
 ; 中文语言包（ChineseSimplified.isl）需要单独下载，国内各镜像均不可达，

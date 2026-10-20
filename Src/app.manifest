@@ -10,8 +10,10 @@
   </trustInfo>
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
+      <!-- Windows 10 / 11（同一 GUID）。
+           .NET 8 最低要求 Windows 10 1607，Windows 8.1 连运行时都装不上，
+           所以这里不声明 Win8.1，避免系统误判为兼容。 -->
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
-      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}" />
     </application>
   </compatibility>
   <!-- DPI 感知：不加这段，系统会把窗口当位图拉伸，字体发糊 -->
