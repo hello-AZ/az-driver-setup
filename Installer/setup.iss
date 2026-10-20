@@ -53,7 +53,9 @@ Name: "{group}\卸载 {#MyAppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Flags: nowait postinstall skipifsilent
+; shellexec：目标 exe 的 manifest 要求管理员，CreateProcess 会返回 740，
+; 改用 ShellExecuteEx 才能正常弹 UAC 启动。
+Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Flags: nowait postinstall skipifsilent shellexec
 
 [UninstallDelete]
 ; 卸载时清掉运行时产生的数据（驱动包与备份体积可能很大）
