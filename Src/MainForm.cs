@@ -777,6 +777,7 @@ namespace DriverSetup
                     else
                     {
                         var machine = catalog.GetMachine(sn);
+                        _machine = machine;      // 字段也要存，顶栏机型信息靠它
                         if (machine != null)
                             log.AppendLine("机型 " + machine.ProductModel + " / MTM " + machine.MTM);
                         else
@@ -1521,40 +1522,6 @@ namespace DriverSetup
             }
 
             return Task.FromResult(0);
-        }
-
-        private async Task DoRestore()
-        {
-            if (!InstallEngine.IsAdmin)
-            {
-                MessageBox.Show(this, "回滚需要管理员权限，请以管理员身份重新启动。", "需要管理员权限");
-                return;
-            }
-            string dir = InstallEngine.LatestBackup();
-            if (string.IsNullOrEmpty(dir))
-            {
-                MessageBox.Show(this, "没有找到备份目录。请先点「备份驱动」。", "无备份");
-                return;
-            }
-            var ask = MessageBox.Show(this, "将从最近一次备份回滚：\r\n" + dir +
-                                        "\r\n\r\n过程可能较慢，继续？", "确认回滚",
-                                      MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
-            if (ask != DialogResult.OK) return;
-
-            Cursor = Cursors.WaitCursor;
-            _progress.Visible = true;
-            try
-            {
-                var prog = new Progress<string>(s => AppendLog(s));
-                int ok = await InstallEngine.RestoreDriversAsync(dir, prog);
-                MessageBox.Show(this, "回滚完成，" + ok + " 个驱动已重新安装。", "完成",
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, "回滚失败：" + ex.Message, "失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally { Cursor = Cursors.Default; _progress.Visible = false; }
         }
 
         private static readonly object _logLock = new object();

@@ -378,32 +378,6 @@ namespace DriverSetup
         }
 
         /// <summary>把备份目录里的 INF 全部重新安装</summary>
-        public static Task<int> RestoreDriversAsync(string dir, IProgress<string> log)
-        {
-            return Task.Run(() =>
-            {
-                if (!Directory.Exists(dir)) return -3;
-                int total = 0, ok = 0;
-                var infs = Directory.GetFiles(dir, "*.inf", SearchOption.AllDirectories);
-                foreach (var inf in infs)
-                {
-                    total++;
-                    var psi = new ProcessStartInfo("pnputil.exe",
-                        "/add-driver \"" + inf + "\" /install");
-                    psi.UseShellExecute = false;
-                    psi.CreateNoWindow = true;
-                    using (var p = Process.Start(psi))
-                    {
-                        p.WaitForExit(120000);
-                        if (p.ExitCode == 0) ok++;
-                    }
-                    if (log != null) log.Report("回滚 " + Path.GetFileName(inf) + " → " + (ok > 0 ? "ok" : "fail"));
-                }
-                if (log != null) log.Report("回滚完成：" + ok + "/" + total);
-                return ok;
-            });
-        }
-
         public static string LatestBackup()
         {
             try

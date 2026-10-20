@@ -105,35 +105,6 @@ namespace DriverSetup
                 catch (Exception ex) { System.IO.File.WriteAllText("perf-error.txt", ex.ToString()); }
                 return;
             }
-            if (false)
-            {
-                var sb = new System.Text.StringBuilder();
-                using (var sampler = new PerfSampler())
-                using (var burner = new CpuBurner())
-                {
-                    sampler.Probe();
-                    sb.AppendLine("admin=" + sampler.IsAdmin + " cpuTemp=" + sampler.CpuTempAvailable +
-                                  " gpu=" + sampler.GpuOk + " gpuName=" + sampler.GpuName);
-                    sb.AppendLine("sec   cpuT  cpuMHz  cpuL%  gpuT  gpuMHz  gpuW");
-                    var sw = System.Diagnostics.Stopwatch.StartNew();
-                    Action<double> take = delegate (double sec)
-                    {
-                        var p = sampler.Sample(sec);
-                        sb.AppendLine(string.Format("{0,5:F1} {1,6:F1} {2,6:F0} {3,6:F0} {4,6:F1} {5,6:F0} {6,6:F1}",
-                            p.Sec, p.CpuTemp, p.CpuClock, p.CpuLoad, p.GpuTemp, p.GpuClock, p.GpuPower));
-                    };
-                    for (int i = 0; i < 3; i++) { take(sw.Elapsed.TotalSeconds); System.Threading.Thread.Sleep(1000); }
-                    burner.Start(Environment.ProcessorCount);
-                    sb.AppendLine("--- 烤机开始 ---");
-                    for (int i = 0; i < 6; i++) { take(sw.Elapsed.TotalSeconds); System.Threading.Thread.Sleep(1000); }
-                    burner.Stop();
-                    sb.AppendLine("--- 烤机结束 ---");
-                    for (int i = 0; i < 2; i++) { take(sw.Elapsed.TotalSeconds); System.Threading.Thread.Sleep(1000); }
-                }
-                System.IO.File.WriteAllText(
-                    System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "perf-test.txt"), sb.ToString());
-                return;
-            }
 
             // 探针：DRV_TEST_LHM=1 时把传感器清单写到文件后退出
             if (Environment.GetEnvironmentVariable("DRV_TEST_LHM") == "1")
