@@ -230,6 +230,15 @@ namespace DriverSetup
                 var m = new LenovoMachine();
                 m.MachineNo = S(data, "MachineNo");
                 m.MachineName = S(data, "MachineName");
+
+                // 短序列号在联想库里会撞到非笔记本记录（实测 "12345678" → X24 23.8 inch Monitor）。
+                // 拿这种记录去查驱动清单，返回的全是无关条目，界面会一堆"非本机配置"。
+                if (IsNonComputer(m.MachineName))
+                {
+                    Log.Add("序列号 " + sn + " 查到的是「" + m.MachineName + "」，不是笔记本，已忽略");
+                    return null;
+                }
+
                 m.MTM = S(data, "MTM");
                 m.ProductModel = S(data, "ProductModel");
                 m.ProductSeries = S(data, "ProductSeries");
@@ -244,6 +253,16 @@ namespace DriverSetup
                 Log.Add("机型查询失败: " + ex.Message);
                 return null;
             }
+        }
+
+        /// <summary>机型名看起来不是笔记本（显示器/配件）时为 true</summary>
+        private static bool IsNonComputer(string machineName)
+        {
+            if (string.IsNullOrEmpty(machineName)) return false;
+            return machineName.IndexOf("Monitor", StringComparison.OrdinalIgnoreCase) >= 0
+                || machineName.IndexOf(" inch", StringComparison.OrdinalIgnoreCase) >= 0
+                || machineName.IndexOf("Display", StringComparison.OrdinalIgnoreCase) >= 0
+                || machineName.IndexOf("显示器", StringComparison.Ordinal) >= 0;
         }
 
         // ---------- 3. 官方驱动清单 ----------
