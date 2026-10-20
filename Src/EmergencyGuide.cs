@@ -66,7 +66,7 @@ namespace DriverSetup
         }
 
         /// <summary>构建指引面板（可直接塞进任意容器）</summary>
-        public static Control Build()
+        public static FlowLayoutPanel Build()
         {
             var host = new FlowLayoutPanel();
             host.FlowDirection = FlowDirection.TopDown;
@@ -184,7 +184,7 @@ namespace DriverSetup
             {
                 f.Text = "应急驱动指引";
                 f.StartPosition = FormStartPosition.CenterParent;
-                f.Size = new Size(660, 560);
+                f.Size = new Size(660, 620);
                 f.MinimumSize = new Size(640, 460);
                 f.BackColor = Paper;
                 f.Font = new Font("Microsoft YaHei UI", 9F);
@@ -197,7 +197,8 @@ namespace DriverSetup
                 body.Padding = new Padding(20);
                 body.BackColor = Paper;
                 var guide = Build();
-                guide.Dock = DockStyle.Fill;     // 弹窗里铺满
+                guide.Dock = DockStyle.Fill;
+                guide.AutoScroll = true;         // 内容超出时能滚，别把底线那句裁掉
                 body.Controls.Add(guide);
                 f.Controls.Add(body);
 
@@ -210,17 +211,22 @@ namespace DriverSetup
                 close.Font = new Font("Microsoft YaHei UI", 8.5F);
                 close.Size = new Size(96, 30);
                 close.DialogResult = DialogResult.OK;
-                close.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+                close.Location = new Point(20, 12);   // 兜底位置
+                close.Click += delegate { f.Close(); };
 
                 var bar = new Panel();
                 bar.Dock = DockStyle.Bottom;
                 bar.Height = 52;
                 bar.BackColor = Paper;
                 bar.Controls.Add(close);
-                bar.Resize += delegate
+
+                Action placeClose = delegate
                 {
+                    if (bar.Width < 220) return;
                     close.Location = new Point(bar.Width - close.Width - 20, 12);
                 };
+                bar.Resize += delegate { placeClose(); };
+                bar.HandleCreated += delegate { placeClose(); };
                 f.Controls.Add(bar);
                 f.AcceptButton = close;
                 f.CancelButton = close;
