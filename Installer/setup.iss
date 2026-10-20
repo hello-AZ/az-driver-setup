@@ -3,7 +3,7 @@
 ; 产物：..\Dist\Installer\AZ-DriverSetup-Setup-<版本>.exe
 
 #define MyAppName "AZ 驱动懒人安装"
-#define MyAppVersion "1.1.1.3"
+#define MyAppVersion "1.1.1.4"
 #define MyAppPublisher "AZ"
 #define MyAppExeName "DriverSetup.exe"
 #define MyAppId "{{8F3A2B1C-4D5E-4F6A-9B7C-1D2E3F4A5B6C}"
@@ -16,7 +16,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\AZ驱动懒人安装
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-OutputDir=..\Dist\Installer
+OutputDir=..\Release
 OutputBaseFilename=AZ-DriverSetup-Setup-{#MyAppVersion}
 Compression=lzma2/max
 SolidCompression=yes

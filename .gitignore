@@ -21,6 +21,7 @@ App/Backup/
 
 # ── 发布产物（自包含 150 MB，不进仓库）──
 Dist/
+Release/
 *.user
 *.suo
 *.userprefs

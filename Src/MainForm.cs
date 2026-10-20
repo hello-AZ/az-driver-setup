@@ -270,6 +270,27 @@ namespace DriverSetup
 
             logPanel.Controls.Add(_logBox);
             logPanel.Controls.Add(logTitle);
+
+            // 底部：关于 / 卸载入口（安装版的卸载程序藏在开始菜单文件夹里，不好找）
+            var aboutBar = new Panel();
+            aboutBar.Dock = DockStyle.Bottom;
+            aboutBar.Height = 36;
+            aboutBar.BackColor = Paper;
+
+            var btnAbout = new Button();
+            btnAbout.Text = "关于 / 卸载";
+            btnAbout.FlatStyle = FlatStyle.Flat;
+            btnAbout.FlatAppearance.BorderSize = 0;
+            btnAbout.BackColor = Paper;
+            btnAbout.ForeColor = Ink3;
+            btnAbout.Font = new Font("Microsoft YaHei UI", 8F);
+            btnAbout.Size = new Size(260, 28);
+            btnAbout.Location = new Point(14, 4);
+            btnAbout.Cursor = Cursors.Hand;
+            btnAbout.Click += delegate { AboutForm.Show(FindForm()); };
+            aboutBar.Controls.Add(btnAbout);
+
+            side.Controls.Add(aboutBar);
             side.Controls.Add(logPanel);
             side.Controls.Add(_sideStats);
 
