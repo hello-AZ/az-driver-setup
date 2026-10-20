@@ -18,6 +18,9 @@ App/Backup/
 
 # ── VS 缓存 ──
 .vs/
+
+# ── 发布产物（自包含 150 MB，不进仓库）──
+Dist/
 *.user
 *.suo
 *.userprefs
