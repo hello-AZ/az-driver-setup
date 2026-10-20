@@ -149,6 +149,11 @@ namespace DriverSetup
         // ---------- 1. 本机序列号 ----------
         public static string ReadSerialNumber()
         {
+            // 调试用：设置 DRV_SN 环境变量可覆盖本机序列号，
+            // 方便测「查不到驱动」「别的机型」这类分支，不影响正常使用。
+            string envSn = Environment.GetEnvironmentVariable("DRV_SN");
+            if (!string.IsNullOrEmpty(envSn)) return envSn.Trim();
+
             try
             {
                 using var searcher = new System.Management.ManagementObjectSearcher(
