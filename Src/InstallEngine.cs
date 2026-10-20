@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Security.Principal;
@@ -18,6 +19,16 @@ namespace DriverSetup
         public int Done;
         public int Total;
         public string Detail = "";
+    }
+
+    /// <summary>恢复结果统计</summary>
+    public class RestoreResult
+    {
+        public int Ok;
+        public int Fail;
+        public int Skip;
+        public readonly List<string> Errors = new List<string>();
+        public bool AnySucceeded { get { return Ok > 0; } }
     }
 
     public static class InstallEngine
@@ -204,6 +215,104 @@ namespace DriverSetup
         /// 用 pnputil 导出本机全部第三方驱动到 Backup\时间戳。
         /// pnputil 自身不报进度，这里靠轮询目标目录的子目录数估算。
         /// </summary>
+        /// <summary>
+        /// 从备份目录恢复驱动：逐个 pnputil /add-driver ... /install。
+        /// 备份是 pnputil /export-driver 导出的，每个子目录里是一套 inf+sys+cat。
+        /// </summary>
+        public static Task<RestoreResult> RestoreFromBackupAsync(
+            string dir, IProgress<BackupProgress> progress, CancellationToken ct)
+        {
+            return Task.Run((Func<RestoreResult>)(() =>
+            {
+                var res = new RestoreResult();
+
+                if (!Directory.Exists(dir))
+                    throw new DirectoryNotFoundException("备份目录不存在：" + dir);
+
+                var infs = Directory.GetFiles(dir, "*.inf", SearchOption.AllDirectories);
+                int total = infs.Length;
+
+                if (total == 0)
+                {
+                    if (progress != null)
+                        progress.Report(new BackupProgress { Stage = "没有找到 .inf", Done = 0, Total = 0 });
+                    return res;
+                }
+
+                for (int i = 0; i < infs.Length; i++)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    string inf = infs[i];
+                    string name = Path.GetFileName(inf);
+
+                    if (progress != null)
+                        progress.Report(new BackupProgress
+                        {
+                            Stage = "正在恢复驱动",
+                            Done = i,
+                            Total = total,
+                            Detail = name
+                        });
+
+                    try
+                    {
+                        var psi = new ProcessStartInfo("pnputil.exe", "/add-driver \"" + inf + "\" /install");
+                        psi.UseShellExecute = false;
+                        psi.CreateNoWindow = true;
+                        psi.RedirectStandardOutput = true;
+                        psi.RedirectStandardError = true;
+                        psi.StandardOutputEncoding = Encoding.Default;
+                        psi.StandardErrorEncoding = Encoding.Default;
+
+                        using (var p = Process.Start(psi))
+                        {
+                            string so = p.StandardOutput.ReadToEnd();
+                            string se = p.StandardError.ReadToEnd();
+
+                            if (!p.WaitForExit(180000))
+                            {
+                                try { p.Kill(); } catch (Exception kex) { Log.Swallow(kex, "Restore.Kill", name); }
+                                res.Fail++;
+                                res.Errors.Add(name + "：超时（3 分钟）");
+                                continue;
+                            }
+
+                            // pnputil /add-driver 的退出码语义：
+                            //   0   = 驱动包已添加，且设备已更新
+                            //   259 = 驱动包已添加，系统里本来就有，设备无需更新
+                            // 两者都算达成目的；只有别的退出码才是真失败。
+                            bool ok = p.ExitCode == 0 || p.ExitCode == 259;
+                            bool skip = !ok &&
+                                        (so.IndexOf("没有", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                                         so.IndexOf("匹配", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                            if (ok) res.Ok++;
+                            else if (skip) res.Skip++;   // 本机没有对应设备，正常跳过
+                            else
+                            {
+                                res.Fail++;
+                                // pnputil 的重定向输出编码不可靠（中文常成问号），只记退出码
+                                res.Errors.Add(name + "：退出码 " + p.ExitCode);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        res.Fail++;
+                        res.Errors.Add(name + "：" + ex.Message);
+                        Log.Swallow(ex, "Restore.AddDriver", name);
+                    }
+                }
+
+                if (progress != null)
+                    progress.Report(new BackupProgress { Stage = "完成", Done = total, Total = total });
+
+                Log.Write("[恢复] 完成：成功 " + res.Ok + " / 跳过 " + res.Skip + " / 失败 " + res.Fail +
+                          "（共 " + total + "）");
+                return res;
+            }), ct);
+        }
+
         public static Task<string> BackupDriversAsync(IProgress<BackupProgress> progress, CancellationToken ct)
         {
             return Task.Run((Func<string>)(() =>

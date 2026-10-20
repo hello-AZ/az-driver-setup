@@ -654,7 +654,17 @@ namespace DriverSetup
             b2.ForeColor = Ink2;
             b2.Size = new Size(164, 36);
             b2.Location = new Point(176, 4);
-            b2.Click += async delegate { await DoRestore(); };
+            b2.Click += delegate
+            {
+                string dir = InstallEngine.LatestBackup();
+                if (string.IsNullOrEmpty(dir))
+                {
+                    MessageBox.Show(this, "还没有备份记录。请先点「备份驱动」。",
+                        "无备份", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                using (var dlg = new RestoreDialog(dir)) dlg.ShowDialog(FindForm());
+            };
 
             btns.Controls.Add(b1);
             btns.Controls.Add(b2);
@@ -1164,7 +1174,17 @@ namespace DriverSetup
             b2.Font = new Font("Microsoft YaHei UI", 8F);
             b2.Size = new Size(120, 28);
             b2.Location = new Point(140, y + 8);
-            b2.Click += async delegate { await DoRestore(); };
+            b2.Click += delegate
+            {
+                string dir = InstallEngine.LatestBackup();
+                if (string.IsNullOrEmpty(dir))
+                {
+                    MessageBox.Show(this, "还没有备份记录。请先点「备份驱动」。",
+                        "无备份", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                using (var dlg = new RestoreDialog(dir)) dlg.ShowDialog(FindForm());
+            };
 
             _sideStats.Controls.Add(b1);
             _sideStats.Controls.Add(b2);
