@@ -87,12 +87,12 @@ namespace DriverSetup
                 req.ReadWriteTimeout = 120000;
 
                 string tmp = dest + ".part";
+                long total = 0, got = 0;      // 提到 using 外，校验时还要用
                 using (var resp = (HttpWebResponse)req.GetResponse())
                 using (var src = resp.GetResponseStream())
                 using (var fs = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None, 81920))
                 {
-                    long total = resp.ContentLength;
-                    long got = 0;
+                    total = resp.ContentLength;
                     byte[] buf = new byte[81920];
                     int n;
                     while (src != null && (n = src.Read(buf, 0, buf.Length)) > 0)
@@ -102,6 +102,15 @@ namespace DriverSetup
                         if (total > 0 && progress != null)
                             progress.Report((int)(got * 100 / total));
                     }
+                }
+
+                // 服务器提前断流时 Read 会返回 0 而不抛异常，
+                // 不校验长度就会把半截文件当成品，后面装出半套驱动
+                if (total > 0 && got != total)
+                {
+                    try { File.Delete(tmp); } catch { }
+                    throw new IOException(string.Format(
+                        "下载不完整：收到 {0} / {1} 字节（{2:P1}）", got, total, (double)got / total));
                 }
 
                 if (File.Exists(dest)) File.Delete(dest);

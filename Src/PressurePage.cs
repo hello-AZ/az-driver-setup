@@ -138,6 +138,7 @@ namespace DriverSetup
             _samplerLoading = true;
 
             // 先把提示摆出来，别让界面僵在那儿
+            Log.Write("[压力] 开始初始化传感器");
             if (_burnPanel != null) _burnPanel.ShowLoading("正在初始化传感器…（首次约 3-6 秒，之后秒开）");
 
             System.Threading.Tasks.Task.Run((Action)delegate
@@ -155,12 +156,14 @@ namespace DriverSetup
                         _samplerLoading = false;
                         if (s != null)
                         {
+                            Log.Write("[压力] 传感器就绪");
                             _sampler = s;
                             if (_burnPanel != null) _burnPanel.SetSampler(s);
                             if (_gpuPanel != null) _gpuPanel.SetSampler(s);
                         }
                         else if (_burnPanel != null)
                         {
+                            Log.Write("[压力] 传感器初始化失败：" + err);
                             _burnPanel.ShowLoading("传感器初始化失败：" + err);
                         }
                     });

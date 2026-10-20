@@ -132,11 +132,14 @@ namespace DriverSetup
 
             try
             {
+                Log.Write("[配置] 开始采集硬件");
                 _snap = await Task.Run((Func<HardwareSnapshot>)(() => HardwareInfo.Collect()));
                 Render();
+                Log.Write("[配置] 采集完成");
             }
             catch (Exception ex)
             {
+                Log.Swallow(ex, "ConfigPage.RefreshData", "硬件采集");
                 _summary.Text = "采集失败：" + ex.Message;
                 _summary.ForeColor = Red;
             }

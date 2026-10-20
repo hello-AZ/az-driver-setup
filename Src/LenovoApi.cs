@@ -476,15 +476,20 @@ namespace DriverSetup
             return arr;
         }
 
-        /// <summary>尾部对齐逐段比较；返回 1=官方更高, 0=相同, -1=官方更低</summary>
+        /// <summary>
+        /// 逐段比较版本号；返回 1=官方更高, 0=相同, -1=官方更低。
+        /// 缺的段按 0 补齐（左边对齐），不能从尾部对齐：
+        /// 尾部对齐会让 "2.0.0" 和 "1.9.9.9" 比成 2 vs 9，误判官网更低。
+        /// </summary>
         private static int CompareNumArrays(int[] off, int[] loc)
         {
             if (off.Length == 0 || loc.Length == 0) return int.MinValue;
-            int n = Math.Min(off.Length, loc.Length);
+
+            int n = Math.Max(off.Length, loc.Length);
             for (int i = 0; i < n; i++)
             {
-                int a = off[off.Length - n + i];
-                int b = loc[loc.Length - n + i];
+                int a = i < off.Length ? off[i] : 0;
+                int b = i < loc.Length ? loc[i] : 0;
                 if (a != b) return a > b ? 1 : -1;
             }
             return 0;
@@ -545,7 +550,7 @@ namespace DriverSetup
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { DriverSetup.Log.Swallow(ex, "LenovoApi:553"); }
             return "";
         }
 

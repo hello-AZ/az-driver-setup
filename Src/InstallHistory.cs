@@ -30,6 +30,9 @@ namespace DriverSetup
             get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "install-history.json"); }
         }
 
+        // 台账是"读-改-写"三步，两个实例同时记录会互相覆盖
+        private static readonly object _lock = new object();
+
         private static readonly JsonSerializerOptions JsonOpts = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -38,29 +41,36 @@ namespace DriverSetup
 
         public static List<Entry> Load()
         {
-            try
+            lock (_lock)
             {
-                if (!File.Exists(FilePath)) return new List<Entry>();
-                string json = File.ReadAllText(FilePath, Encoding.UTF8);
-                var list = JsonSerializer.Deserialize<List<Entry>>(json, JsonOpts);
-                return list ?? new List<Entry>();
+                try
+                {
+                    if (!File.Exists(FilePath)) return new List<Entry>();
+                    string json = File.ReadAllText(FilePath, Encoding.UTF8);
+                    var list = JsonSerializer.Deserialize<List<Entry>>(json, JsonOpts);
+                    return list ?? new List<Entry>();
+                }
+                catch { return new List<Entry>(); }
             }
-            catch { return new List<Entry>(); }
         }
 
         public static void Record(Entry e)
         {
-            try
+            lock (_lock)
             {
-                var all = Load();
-                all.Add(e);
+                try
+                {
+                    // 注意：Load 内部也 lock 同一把锁，但 C# 的 lock 可重入，不会死锁
+                    var all = Load();
+                    all.Add(e);
 
-                // 只保留最近 200 条
-                if (all.Count > 200) all = all.Skip(all.Count - 200).ToList();
+                    // 只保留最近 200 条
+                    if (all.Count > 200) all = all.Skip(all.Count - 200).ToList();
 
-                File.WriteAllText(FilePath, JsonSerializer.Serialize(all, JsonOpts), Encoding.UTF8);
+                    File.WriteAllText(FilePath, JsonSerializer.Serialize(all, JsonOpts), Encoding.UTF8);
+                }
+                catch (Exception ex) { Log.Swallow(ex, "InstallHistory:72"); }
             }
-            catch { }
         }
 
         /// <summary>按 oem*.inf 名字查台账；没有记录返回 null</summary>
@@ -104,7 +114,7 @@ namespace DriverSetup
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "InstallHistory:117"); }
             return list;
         }
 

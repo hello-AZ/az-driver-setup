@@ -64,7 +64,7 @@ namespace DriverSetup
                 var pr = new System.Security.Principal.WindowsPrincipal(id);
                 IsAdmin = pr.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "PerfSampler:67"); }
 
             try
             {
@@ -81,7 +81,7 @@ namespace DriverSetup
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "PerfSampler:84"); }
 
             try
             {
@@ -113,7 +113,7 @@ namespace DriverSetup
                     catch { _corePerf[i] = null; }
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "PerfSampler:116"); }
 
             try
             {
@@ -152,7 +152,7 @@ namespace DriverSetup
                             System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gpu-sensors.txt"),
                             "dump 失败: " + ex);
                     }
-                    catch { }
+                    catch (Exception ex2) { Log.Swallow(ex2, "PerfSampler:155"); }
                 }
 
                 foreach (var hw in _comp.Hardware)
@@ -181,10 +181,10 @@ namespace DriverSetup
                                 if (sen.SensorType == SensorType.Fan) { _fanSources.Add(sub); break; }
                         }
                     }
-                    catch { }
+                    catch (Exception ex) { Log.Swallow(ex, "PerfSampler:184"); }
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "PerfSampler:187"); }
         }
 
         /// <summary>探一次，确认 CPU 温度到底能不能读</summary>
@@ -203,7 +203,7 @@ namespace DriverSetup
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Swallow(ex, "PerfSampler:206"); }
 
             if (_gpu != null)
             {
@@ -214,7 +214,7 @@ namespace DriverSetup
                     foreach (var s in _gpu.Sensors)
                         if (s.SensorType == SensorType.Temperature && s.Value != null) { GpuOk = true; break; }
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "PerfSampler:217"); }
             }
         }
 
@@ -257,7 +257,7 @@ namespace DriverSetup
                     CpuTempAvailable = !double.IsNaN(p.CpuTemp);   // 状态行靠它决定是否提示"需管理员"
                     if (!double.IsNaN(c1)) p.CpuClock = c1;
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "PerfSampler:260"); }
             }
 
             // ---- CPU 频率兜底（性能计数器：基频 × 性能比）----
@@ -268,7 +268,7 @@ namespace DriverSetup
                     float v = _perfPct.NextValue();
                     if (v > 0) p.CpuClock = _baseMhz * v / 100.0;
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "PerfSampler:271"); }
             }
 
             if (_loadPct != null)
@@ -294,7 +294,7 @@ namespace DriverSetup
                         sum += mhz;
                         cnt++;
                     }
-                    catch { }
+                    catch (Exception ex) { Log.Swallow(ex, "PerfSampler:297"); }
                 }
                 if (cnt > 0)
                 {
@@ -333,7 +333,7 @@ namespace DriverSetup
                     if (!double.IsNaN(maxFan) && (double.IsNaN(p.FanRpm) || maxFan > p.FanRpm))
                         p.FanRpm = maxFan;
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "PerfSampler:336"); }
             }
 
             // ---- GPU（LHM / NVML）----
@@ -356,7 +356,7 @@ namespace DriverSetup
                                 System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "gpu-sensors.txt"),
                                 sb.ToString());
                         }
-                        catch { }
+                        catch (Exception ex) { Log.Swallow(ex, "PerfSampler:359"); }
                     }
 
                     foreach (var s in _gpu.Sensors)
@@ -385,7 +385,7 @@ namespace DriverSetup
                         }
                     }
                 }
-                catch { }
+                catch (Exception ex) { Log.Swallow(ex, "PerfSampler:388"); }
             }
 
             return p;

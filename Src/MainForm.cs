@@ -404,6 +404,10 @@ namespace DriverSetup
             if (_pages == null || index < 0 || index >= _pages.Length) return;
 
             _currentPage = index;
+            {
+                string[] _names = { "配置核对", "驱动安装", "固件提示", "备份回滚", "硬件测试", "压力测试", "系统排查" };
+                if (index >= 0 && index < _names.Length) Log.Write("[页面] 切换到 " + _names[index]);
+            }
             for (int i = 0; i < _pages.Length; i++)
                 _pages[i].Visible = (i == index);
 

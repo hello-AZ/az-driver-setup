@@ -288,6 +288,17 @@ namespace DriverSetup
                 }
             }
             if (index < _views.Length && _views[index] != null) _views[index].BringToFront();
+
+            // 切页就重置该页状态：
+            // 键盘是全局 Raw Input 监听，不重置会带着别处按下的键；
+            // 鼠标的计数/轨迹/双击统计也该从零开始
+            if (index == 0 && _kb != null)
+                _kb.ResetAll();
+            else if (index == 1)
+            {
+                var m = _views[1] as MouseTestPage;
+                if (m != null) m.ResetAll();
+            }
         }
 
         /// <summary>接收 Raw Input 转来的物理按键</summary>

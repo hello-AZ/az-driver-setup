@@ -262,7 +262,8 @@ namespace DriverSetup
 
         private void StartBurn()
         {
-            if (_sampler == null) return;
+            if (_sampler == null) { Log.Write("[CPU烤机] 没有采样器，无法开始"); return; }
+            Log.Write("[CPU烤机] 开始");
             _chart.Clear();
             _sec = 0;
             _running = true;
@@ -302,6 +303,7 @@ namespace DriverSetup
 
         private void StopBurn()
         {
+            Log.Write("[CPU烤机] 停止");
             _running = false;
             try { _burner.Stop(); } catch { }
             if (_timer != null) _timer.Stop();

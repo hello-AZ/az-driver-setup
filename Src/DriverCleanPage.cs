@@ -149,11 +149,15 @@ namespace DriverSetup
             _btnDelete.BackColor = Red;
             _btnDelete.ForeColor = Color.White;
             _btnDelete.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Bold);
-            _btnDelete.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            _btnDelete.Location = new Point(Width - 144, 8);
+            // 不用 Anchor：容器初始宽度(200)会把锚点偏移算错，控件跑出可见区
+            _btnDelete.Location = new Point(160, 8);
             _btnDelete.Click += delegate { DoDelete(); };
             bar.Controls.Add(_btnDelete);
-            bar.Resize += delegate { _btnDelete.Location = new Point(bar.Width - 144, 8); };
+            bar.Resize += delegate
+            {
+                if (bar.Width < 200) return;
+                _btnDelete.Location = new Point(bar.Width - 144, 8);
+            };
 
             // ---------- 列表 ----------
             _dgv = new DataGridView();
@@ -230,6 +234,7 @@ namespace DriverSetup
 
         public void RefreshData()
         {
+            Log.Write("[排查] 开始枚举驱动");
             if (_summary != null) { _summary.Text = "正在读取驱动列表…"; _summary.ForeColor = Ink3; }
 
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
@@ -245,6 +250,7 @@ namespace DriverSetup
                     BeginInvoke((Action)delegate
                     {
                         _all = list;
+                        Log.Write("[排查] 驱动枚举完成，共 " + list.Count + " 个驱动包" + (err != null ? "，错误：" + err : ""));
                         if (err != null && _summary != null) _summary.Text = "读取失败：" + err;
                         ApplyFilter();
                     });

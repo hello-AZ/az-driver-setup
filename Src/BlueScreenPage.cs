@@ -133,6 +133,7 @@ namespace DriverSetup
 
         private void ShowLoading(string text)
         {
+            Log.Write("[排查] " + text);
             if (_list == null) return;
             _list.SuspendLayout();
             _list.Controls.Clear();
