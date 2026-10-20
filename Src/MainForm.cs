@@ -779,6 +779,7 @@ namespace DriverSetup
                 string error = null;
                 bool unsupported = false;
                 bool uiScheduled = false;    // UI 回填是否已排队（决定 _busy 由谁复位）
+                IDriverCatalog manualCatalog = null;   // 认识厂商但没接口 → 手动引导
                 string vendorName = null;
 
                 try
@@ -805,6 +806,12 @@ namespace DriverSetup
                     if (catalog == null)
                     {
                         unsupported = true;
+                    }
+                    else if (!catalog.CanQueryDrivers)
+                    {
+                        // 厂商认识，但官网没开放接口：能读本机机型，拿不到驱动清单
+                        manualCatalog = catalog;
+                        log.AppendLine("厂商 " + catalog.DisplayName + " 未开放驱动查询接口，改为手动引导");
                     }
                     else
                     {
@@ -857,6 +864,10 @@ namespace DriverSetup
                                 AppendLog("暂不支持该厂商");
                                 ShowUnsupported(vendorName);
                             }
+                            else if (manualCatalog != null)
+                            {
+                                ShowManualLookup(manualCatalog);
+                            }
                             else if (results != null)
                             {
                                 Render(results);
@@ -906,6 +917,105 @@ namespace DriverSetup
             });
         }
 
+        /// <summary>厂商认识但没有驱动查询接口：显示本机机型 + 官网跳转</summary>
+        private void ShowManualLookup(IDriverCatalog catalog)
+        {
+            _listPanel.SuspendLayout();
+            _listPanel.Controls.Clear();
+
+            // 机型名来自本地 WMI（Win32_ComputerSystemProduct.Version），不依赖厂商接口
+            string localModel = "";
+            try { localModel = LenovoApi.ReadProductModel(); }
+            catch (Exception ex) { Log.Swallow(ex, "ShowManualLookup.ReadProductModel"); }
+
+            var head = new Label();
+            head.Text = catalog.DisplayName + "官网暂未开放驱动查询接口";
+            head.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Bold);
+            head.ForeColor = Ink;
+            head.AutoSize = true;
+            head.Margin = new Padding(22, 22, 0, 6);
+            _listPanel.Controls.Add(head);
+
+            var modelLine = new Label();
+            modelLine.Text = "本机机型：" + (string.IsNullOrEmpty(localModel) ? "未能读取到" : localModel);
+            modelLine.Font = new Font("Microsoft YaHei UI", 9.5F);
+            modelLine.ForeColor = Blue;
+            modelLine.AutoSize = true;
+            modelLine.Margin = new Padding(22, 0, 0, 12);
+            _listPanel.Controls.Add(modelLine);
+
+            var desc = new Label();
+            desc.Text = "程序能读到本机硬件信息（见「配置核对」页），但拿不到" + catalog.DisplayName + "的驱动清单。\r\n" +
+                        "请点击下方按钮前往官网，按机型或序列号自行下载对应的驱动。";
+            desc.Font = new Font("Microsoft YaHei UI", 8.5F);
+            desc.ForeColor = Ink2;
+            desc.AutoSize = false;
+            desc.Size = new Size(620, 60);
+            desc.Margin = new Padding(22, 0, 0, 12);
+            _listPanel.Controls.Add(desc);
+
+            var btn = new Button();
+            btn.Text = "打开" + catalog.DisplayName + "驱动下载页";
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderColor = Line;
+            btn.BackColor = Paper2;
+            btn.ForeColor = Ink;
+            btn.Font = new Font("Microsoft YaHei UI", 9F);
+            btn.Size = new Size(200, 34);
+            btn.Margin = new Padding(24, 0, 0, 12);
+            btn.Cursor = Cursors.Hand;
+            string url = catalog.OfficialPage;
+            btn.Click += delegate { OpenExternal(url); };
+            _listPanel.Controls.Add(btn);
+
+            var official = new Label();
+            official.Text = url;
+            official.Font = new Font("Microsoft YaHei UI", 8F);
+            official.ForeColor = Ink3;
+            official.AutoSize = true;
+            official.Margin = new Padding(24, 0, 0, 16);
+            _listPanel.Controls.Add(official);
+
+            var tip = new Label();
+            tip.Text = "其余功能仍可用：配置核对 / 硬件测试 / 压力测试 / 系统排查 都不依赖厂商接口。";
+            tip.Font = new Font("Microsoft YaHei UI", 8.5F);
+            tip.ForeColor = Ink3;
+            tip.AutoSize = false;
+            tip.Size = new Size(620, 24);
+            tip.Margin = new Padding(22, 0, 0, 8);
+            _listPanel.Controls.Add(tip);
+
+            _listPanel.ResumeLayout();
+
+            _status.Text = catalog.DisplayName + " · 无驱动查询接口";
+            _machineInfo.Text = localModel;
+            BuildStats(0, 0, 0, 0, 0, 0);
+        }
+
+        /// <summary>用默认浏览器打开网址</summary>
+        private void OpenExternal(string url)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url)
+                {
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Swallow(ex, "MainForm.OpenExternal");
+                MessageBox.Show(this, "打开浏览器失败，请手动访问：\r\n" + url,
+                    "打开失败", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>强调色画笔（机型名用）</summary>
+        private Color AccentBrush()
+        {
+            return Theme.Accent;
+        }
+
         /// <summary>官网没有这台机器的驱动记录时的空状态</summary>
         private void ShowNoDrivers()
         {
@@ -945,6 +1055,8 @@ namespace DriverSetup
             _listPanel.Controls.Add(why);
 
             // 复用应急指引：0 条驱动和查不到机型是同一类困境
+            // 这里是联想机型，第三条卡片恢复成联想驱动页
+            EmergencyGuide.SetVendor("联想", "https://newsupport.lenovo.com.cn/driveDownloads_index.html");
             _listPanel.Controls.Add(EmergencyGuide.Build());
 
             _listPanel.ResumeLayout();
@@ -1039,6 +1151,9 @@ namespace DriverSetup
             _listPanel.Controls.Add(l);
 
             // 不支持 ≠ 死路：这张机器照样能靠通用驱动跑起来
+            // 未知厂商时第三条卡片改成搜索引导（默认指向联想驱动页会误导）
+            EmergencyGuide.SetVendor("电脑厂商",
+                "https://cn.bing.com/search?q=" + Uri.EscapeDataString("笔记本 官方驱动下载"));
             _listPanel.Controls.Add(EmergencyGuide.Build());
 
             _status.Text = "不支持的厂商 · 可用通用驱动";

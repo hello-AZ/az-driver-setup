@@ -59,10 +59,21 @@ namespace DriverSetup
                     Title = "剩下的回原厂官网",
                     Desc = "音频、触摸板、Fn 键、电源管理、BIOS 只能从 OEM 拿。\r\n" +
                            "通用版装得上，但会丢 OEM 定制功能（音效、色域、省电策略）。",
-                    Url = "https://newsupport.lenovo.com.cn/driveDownloads_index.html",
-                    Button = "打开联想驱动页"
+                    Url = _vendorPage,
+                    Button = "打开" + _vendorName + "驱动页"
                 }
             };
+        }
+
+        // 第三条卡片按当前厂商动态生成（联想机型给联想驱动页，其他厂商给对应官网）
+        private static string _vendorName = "联想";
+        private static string _vendorPage = "https://newsupport.lenovo.com.cn/driveDownloads_index.html";
+
+        /// <summary>指定第三条卡片指向的厂商官网；不传则默认联想</summary>
+        public static void SetVendor(string displayName, string officialPage)
+        {
+            if (!string.IsNullOrEmpty(displayName)) _vendorName = displayName;
+            if (!string.IsNullOrEmpty(officialPage)) _vendorPage = officialPage;
         }
 
         /// <summary>构建指引面板（可直接塞进任意容器）</summary>
