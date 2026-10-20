@@ -885,10 +885,65 @@ namespace DriverSetup
             });
         }
 
+        /// <summary>官网没有这台机器的驱动记录时的空状态</summary>
+        private void ShowNoDrivers()
+        {
+            _listPanel.SuspendLayout();
+            _listPanel.Controls.Clear();
+
+            var head = new Label();
+            head.Text = "联想官网没有这台机器的驱动记录";
+            head.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Bold);
+            head.ForeColor = Ink;
+            head.AutoSize = true;
+            head.Margin = new Padding(22, 22, 0, 6);
+            _listPanel.Controls.Add(head);
+
+            var snLine = new Label();
+            snLine.Text = _machine != null && !string.IsNullOrEmpty(_machine.MachineNo)
+                ? "序列号 " + Mask(_machine.MachineNo)
+                : "序列号未读取到";
+            snLine.Font = new Font("Microsoft YaHei UI", 8.5F);
+            snLine.ForeColor = Ink3;
+            snLine.AutoSize = true;
+            snLine.Margin = new Padding(22, 0, 0, 16);
+            _listPanel.Controls.Add(snLine);
+
+            var why = new Label();
+            why.Text = "可能原因：\r\n" +
+                       "   ① 海外版 / 非国内出货机型——驱动库按销售区域收录\r\n" +
+                       "   ② 新上市机型，驱动尚未录入\r\n" +
+                       "   ③ 序列号读取有误\r\n" +
+                       "   ④ 机型已过官方支持期，驱动已下架\r\n\r\n" +
+                       "可以先去联想官网按 MTM 手动查一次；实在查不到，用下面的通用驱动方案。";
+            why.Font = new Font("Microsoft YaHei UI", 8.5F);
+            why.ForeColor = Ink2;
+            why.AutoSize = false;
+            why.Size = new Size(620, 120);
+            why.Margin = new Padding(22, 0, 0, 12);
+            _listPanel.Controls.Add(why);
+
+            // 复用应急指引：0 条驱动和查不到机型是同一类困境
+            _listPanel.Controls.Add(EmergencyGuide.Build());
+
+            _listPanel.ResumeLayout();
+
+            _status.Text = "官网无该机型的驱动记录";
+            BuildStats(0, 0, 0, 0, 0, 0);
+        }
+
         private void Render(List<CompareResult> results)
         {
             // 固件页 / 备份页都要读这份数据，必须存下来
             _results = results;
+
+            // 官网一条都没返回：这台机器在驱动库里没有记录。
+            // 以前这里会静默渲染成空白，用户分不清"没驱动"和"程序坏了"。
+            if (results.Count == 0)
+            {
+                ShowNoDrivers();
+                return;
+            }
 
             _listPanel.SuspendLayout();
             _listPanel.Controls.Clear();
