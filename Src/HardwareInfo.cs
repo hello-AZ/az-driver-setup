@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Management;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -326,8 +327,27 @@ namespace DriverSetup
         }
 
         // ---------- 屏幕 ----------
+        /// <summary>
+        /// 规范化显示器实例名。
+        /// WmiMonitorID 给的是 "DISPLAY\AUOC1A5\5&14297ea0&0&UID4357_0"，
+        /// 注册表里的实例是 "5&14297ea0&0&UID4357"（没有 _0 后缀），
+        /// 不统一就匹配不上，只能退回按 PNP 判断，导致同型号残留全部被当成激活。
+        /// </summary>
+        private static string NormalizeInstance(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            int i = s.LastIndexOf('_');
+            if (i > 0 && i == s.Length - 2 && char.IsDigit(s[i + 1]))
+                return s.Substring(0, i);
+            return s;
+        }
+
         private static void CollectMonitor(HardwareSnapshot s)
         {
+            // 必须按完整实例路径判断激活状态，不能只看 PNP ID：
+            // 同一块屏换过接口/扩展坞会在注册表留下多个实例，PNP 都一样（如 CMN1560），
+            // 只按 PNP 判断会把所有残留实例都当成"激活"。
+            var activeFull = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var activePnp = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try
             {
@@ -338,9 +358,12 @@ namespace DriverSetup
                     {
                         if (ToInt(mo["Active"]) != 0)
                         {
-                            string inst = Clean(mo["InstanceName"]);
-                            string[] parts = inst.Split('\\');
-                            if (parts.Length >= 2) activePnp.Add(parts[1]);
+                            string instName = Clean(mo["InstanceName"]);
+                            if (string.IsNullOrEmpty(instName)) continue;
+
+                            activeFull.Add(NormalizeInstance(instName));   // 去掉 WmiMonitorID 的 _0 后缀
+                            string[] parts = instName.Split('\\');
+                            if (parts.Length >= 2) activePnp.Add(parts[1]);   // 兜底用
                         }
                     }
                 }
@@ -368,7 +391,8 @@ namespace DriverSetup
                                     var m = ParseEdid(edid);
                                     if (m == null) continue;
                                     m.PnpId = pnp;
-                                    m.Active = activePnp.Contains(pnp);
+                                    // 完整实例路径匹配：DISPLAY\{PNP}\{实例}
+                                    m.Active = activeFull.Contains(NormalizeInstance(@"DISPLAY\" + pnp + @"\" + inst));
                                     s.Monitors.Add(m);
                                 }
                             }
@@ -377,6 +401,17 @@ namespace DriverSetup
                 }
             }
             catch (Exception) { }
+
+            // 兜底：如果完整路径一条都没对上（WMI 与注册表的命名格式不一致），
+            // 退回按 PNP ID 判断，至少不会一台屏都显示不出来
+            if (activePnp.Count > 0 && !s.Monitors.Any(x => x.Active))
+            {
+                foreach (var mm in s.Monitors) mm.Active = activePnp.Contains(mm.PnpId);
+            }
+
+            // 只保留当前激活的：注销掉的旧显示器、换过接口的残留实例都不属于本机配置。
+            // 两台同型号的真双屏实例不同、都 Active，会被保留。
+            s.Monitors.RemoveAll(x => !x.Active);
 
             // 去重：同一面板换过接口/扩展坞会在注册表里留下多个枚举实例。
             // 但不能盲目按 PNP+尺寸合并——两台同型号外接屏长得完全一样，会被并成一台。
