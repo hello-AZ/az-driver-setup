@@ -194,6 +194,15 @@ namespace DriverSetup
                 Dump(e.ExceptionObject as Exception);
             };
 
+            // --refresh：直接开刷新率测试（调试/验证用）。
+            // 放在异常处理安装之后，这样这个入口自己崩了也会落盘；
+            // 必须晚于 SetUnhandledExceptionMode（那行要求句柄未创建）但早于主窗体。
+            if (args != null && Array.IndexOf(args, "--refresh") >= 0)
+            {
+                using (var rf = new RefreshTestForm()) rf.ShowDialog();
+                return;
+            }
+
             // 进度窗放在这之后：窗口一旦创建，上面那行 SetUnhandledExceptionMode 就调不了了
             SplashForm splash = new SplashForm();
             splash.Show();
