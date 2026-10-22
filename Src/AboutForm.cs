@@ -166,9 +166,13 @@ namespace DriverSetup
 
                         try
                         {
-                            Process.Start(new ProcessStartInfo(unins, "/SILENT /NORESTART")
+                            // 卸载程序会检测主进程是否还在运行；直接 Start 再 Exit 有竞态，
+                            // 撞上就静默放弃——点了卸载什么都不会发生。改成延迟 3 秒再拉起卸载器。
+                            Process.Start(new ProcessStartInfo("cmd.exe",
+                                "/c ping 127.0.0.1 -n 4 >nul & \"" + unins + "\" /SILENT /NORESTART")
                             {
-                                UseShellExecute = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
                                 WorkingDirectory = BaseDir
                             });
                             // 卸载程序需要本进程退出才能删文件

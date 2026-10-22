@@ -195,8 +195,8 @@ namespace DriverSetup
             {
                 f.Text = "应急驱动指引";
                 f.StartPosition = FormStartPosition.CenterParent;
-                f.Size = new Size(660, 620);
-                f.MinimumSize = new Size(640, 460);
+                f.Size = new Size(684, 620);
+                f.MinimumSize = new Size(664, 460);
                 f.BackColor = Paper;
                 f.Font = new Font("Microsoft YaHei UI", 9F);
                 f.MaximizeBox = false;
@@ -209,7 +209,11 @@ namespace DriverSetup
                 body.BackColor = Paper;
                 var guide = Build();
                 guide.Dock = DockStyle.Fill;
-                guide.AutoScroll = true;         // 内容超出时能滚，别把底线那句裁掉
+                // Build() 里是 AutoSize=GrowAndShrink：面板会始终等于内容尺寸，
+                // AutoScroll 永远不会触发，内容超高时底部那行红线警告直接被裁掉。
+                // 这里必须关掉自适应，让 Dock + AutoScroll 真正生效。
+                guide.AutoSize = false;
+                guide.AutoScroll = true;
                 body.Controls.Add(guide);
                 f.Controls.Add(body);
 

@@ -197,8 +197,21 @@ namespace DriverSetup
 
                 using (var p = Process.Start(psi))
                 {
-                    string all = p.StandardOutput.ReadToEnd();
-                    p.WaitForExit(90000);
+                    // 必须先异步抽管道再等退出：ReadToEnd() 会一直阻塞到进程关闭管道，
+                    // 写在其后的 WaitForExit 超时永远不会生效，pnputil 卡住就整体挂死。
+                    var outTask = p.StandardOutput.ReadToEndAsync();
+
+                    if (!p.WaitForExit(90000))
+                    {
+                        try { p.Kill(); } catch (Exception kex) { Log.Swallow(kex, "CountDrivers.Kill"); }
+                        try { p.WaitForExit(3000); } catch (Exception) { }
+                        try { outTask.GetAwaiter().GetResult(); } catch (Exception) { }
+                        Log.Write("[备份] pnputil /enum-drivers 90 秒未返回，已终止，按 0 个驱动处理");
+                        return 0;
+                    }
+
+                    string all;
+                    try { all = outTask.GetAwaiter().GetResult(); } catch (Exception) { all = ""; }
                     return Regex.Matches(all, @"oem\d+\.inf", RegexOptions.IgnoreCase).Count;
                 }
             }
@@ -266,16 +279,29 @@ namespace DriverSetup
 
                         using (var p = Process.Start(psi))
                         {
-                            string so = p.StandardOutput.ReadToEnd();
-                            string se = p.StandardError.ReadToEnd();
+                            // 异步抽管道 + 再等退出：ReadToEnd() 会阻塞到管道关闭，
+                            // 写在后面的 WaitForExit 超时永远不会生效，pnputil 卡住就整体挂死。
+                            var soTask = p.StandardOutput.ReadToEndAsync();
+                            var seTask = p.StandardError.ReadToEndAsync();
 
                             if (!p.WaitForExit(180000))
                             {
                                 try { p.Kill(); } catch (Exception kex) { Log.Swallow(kex, "Restore.Kill", name); }
+                                try { p.WaitForExit(3000); } catch (Exception) { }
+                                try { soTask.GetAwaiter().GetResult(); } catch (Exception) { }
+                                try { seTask.GetAwaiter().GetResult(); } catch (Exception) { }
                                 res.Fail++;
                                 res.Errors.Add(name + "：超时（3 分钟）");
                                 continue;
                             }
+
+                            string so, se;
+                            try
+                            {
+                                so = soTask.GetAwaiter().GetResult();
+                                se = seTask.GetAwaiter().GetResult();
+                            }
+                            catch (Exception) { so = ""; se = ""; }
 
                             // pnputil /add-driver 的退出码语义：
                             //   0   = 驱动包已添加，且设备已更新
@@ -360,7 +386,14 @@ namespace DriverSetup
                         try { p.Kill(); } catch (Exception) { }
                     }
 
-                    ct.ThrowIfCancellationRequested();
+                    // 取消时把半成品目录删掉： LatestBackup() 按目录名排序，
+                    // 留着这个残缺备份会被当成"最近备份"，恢复时装的是缺驱动的集合。
+                    if (ct.IsCancellationRequested)
+                    {
+                        try { Directory.Delete(dir, true); }
+                        catch (Exception dex) { Log.Swallow(dex, "Backup.CleanupCancel", dir); }
+                        ct.ThrowIfCancellationRequested();
+                    }
 
                     int final = CountSubDirs(dir);
                     if (progress != null)

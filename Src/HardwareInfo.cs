@@ -274,7 +274,9 @@ namespace DriverSetup
                         string n = Clean(mo["FriendlyName"]);
                         if (string.IsNullOrEmpty(n)) continue;
                         int hs = ToInt(mo["HealthStatus"]);
-                        healthByName[n] = (hs == 0 || hs == 1);   // 0=Healthy 1=Warning
+                        // MSFT_PhysicalDisk.HealthStatus：0=Healthy 1=Warning 2=Unhealthy 5=Unknown
+                        // 之前写成 (hs == 0 || hs == 1)，把「预警」也算健康了——即将故障的盘会显示正常。
+                        healthByName[n] = (hs == 0);
                     }
                 }
             }

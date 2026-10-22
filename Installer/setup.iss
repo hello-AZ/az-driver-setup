@@ -1,9 +1,9 @@
-; AZ 驱动懒人安装 - Inno Setup 打包脚本
+﻿; AZ 驱动懒人安装 - Inno Setup 打包脚本
 ; 编译：ISCC.exe setup.iss
 ; 产物：..\Dist\Installer\AZ-DriverSetup-Setup-<版本>.exe
 
 #define MyAppName "AZ 驱动懒人安装"
-#define MyAppVersion "1.1.2.2"
+#define MyAppVersion "1.1.2.3"
 #define MyAppPublisher "AZ"
 #define MyAppExeName "DriverSetup.exe"
 #define MyAppId "{{8F3A2B1C-4D5E-4F6A-9B7C-1D2E3F4A5B6C}"

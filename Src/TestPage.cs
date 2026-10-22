@@ -319,6 +319,7 @@ namespace DriverSetup
         {
             try
             {
+                if (!System.IO.File.Exists(LayoutPrefPath)) return 1;   // 首次运行没有这个文件，属正常
                 string t = System.IO.File.ReadAllText(LayoutPrefPath).Trim();
                 int v;
                 if (int.TryParse(t, out v) && v >= 0 && v < KeyboardLayouts.Names.Length) return v;

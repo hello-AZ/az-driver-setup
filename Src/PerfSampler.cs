@@ -466,11 +466,34 @@ namespace DriverSetup
                 try { _cts.Cancel(); } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:443"); }
                 _cts = null;
             }
+            if (_threads.Count == 0) return;
+
+            // 原来 Join(300) 超时后直接 Clear：线程还在满载跑，却没了引用，
+            // 变成孤儿线程——用户以为停了，CPU 还在烧；再点开始还会叠加负载。
+            // 现在最多等 6 秒，没退出的继续留在 _threads 里，下次 Start 前会再收一次。
+            var alive = new List<Thread>();
             foreach (var t in _threads)
             {
-                try { if (!t.Join(300)) { } } catch (Exception ex) { Log.Swallow(ex, "PerfSampler:448"); }
+                bool exited = false;
+                try
+                {
+                    for (int i = 0; i < 3 && !exited; i++) exited = t.Join(2000);
+                }
+                catch (Exception ex)
+                {
+                    Log.Swallow(ex, "PerfSampler:448");
+                    exited = true;
+                }
+
+                if (!exited)
+                {
+                    alive.Add(t);
+                    Log.Write("[烤机] 有线程 6 秒内没退出，仍留在列表里等下次回收");
+                }
             }
+
             _threads.Clear();
+            _threads.AddRange(alive);
         }
 
         public void Dispose() { Stop(); }

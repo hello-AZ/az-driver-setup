@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("AZ 驱动懒人安装")]
@@ -7,5 +7,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("AZ")]
 [assembly: AssemblyCopyright("Copyright © 2026 AZ")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.1.2.2")]
-[assembly: AssemblyFileVersion("1.1.2.2")]
+[assembly: AssemblyVersion("1.1.2.3")]
+[assembly: AssemblyFileVersion("1.1.2.3")]

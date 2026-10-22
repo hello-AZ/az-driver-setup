@@ -562,7 +562,7 @@ namespace DriverSetup
             {
                 foreach (var v in c.Split('/'))
                 {
-                    int r = CompareNumArrays(Nums(VersionPart(v)), Nums(local));
+                    int r = CompareNumArrays(Nums(VersionPart(v)), Nums(VersionPart(local)));
                     if (r == int.MinValue) continue;
                     if (r == 0) matched = true;
                     if (best == int.MinValue || r > best) best = r;
