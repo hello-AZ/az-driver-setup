@@ -62,6 +62,12 @@ namespace DriverSetup
             KeyDown += delegate (object s, KeyEventArgs e)
             {
                 if (e.KeyCode == Keys.Escape || e.KeyCode == Keys.Space) Close();
+                else if (e.KeyCode == Keys.T)
+                {
+                    // 面板有没有丢帧只能用相机验证，软件侧没有 API 可读，直接交给 testufo
+                    try { System.Diagnostics.Process.Start("https://testufo.com/frameskipping"); }
+                    catch (Exception ex) { Log.Swallow(ex, "RefreshTestForm.TestUfo"); }
+                }
             };
             MouseClick += delegate { Close(); };
 
@@ -294,7 +300,10 @@ namespace DriverSetup
 
             using (var f = new Font("Microsoft YaHei UI", 10F))
             using (var b = new SolidBrush(Color.FromArgb(130, 130, 130)))
-                g.DrawString("Esc / 空格 / 点击 退出", f, b, w - 220, h - 40);
+            {
+                g.DrawString("Esc / 空格 / 点击 退出    ·    T 打开 testufo 帧跳过测试（验证面板有没有丢帧）",
+                             f, b, 40, h - 34);
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

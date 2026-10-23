@@ -3,7 +3,7 @@
 ; 产物：..\Dist\Installer\AZ-DriverSetup-Setup-<版本>.exe
 
 #define MyAppName "AZ 驱动懒人安装"
-#define MyAppVersion "1.1.2.4"
+#define MyAppVersion "1.1.2.5"
 #define MyAppPublisher "AZ"
 #define MyAppExeName "DriverSetup.exe"
 #define MyAppId "{{8F3A2B1C-4D5E-4F6A-9B7C-1D2E3F4A5B6C}"
