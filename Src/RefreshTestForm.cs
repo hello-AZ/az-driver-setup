@@ -37,6 +37,7 @@ namespace DriverSetup
         private bool _qdcExact;               // true=按设备名精确匹配，false=按系统模式推断
         private string _allRates = "";        // 全部显示器的刷新率摘要
         private double _lastPoll = -9999;
+        private double _lastFrameMs = -1;
 
         public RefreshTestForm() : this(null) { }
 
@@ -198,7 +199,12 @@ namespace DriverSetup
                     ReadRefresh();
                 }
 
-                _x += (float)(Math.Max(6.0, w / 62.0));
+                // 按时间移动，不能按帧算：210Hz 屏上每帧固定像素会让方块快 3.4 倍，
+                // 拖影完全看不清。固定「每秒移动 1/3 屏宽」，所有刷新率下手感一致。
+                double frameDt = _lastFrameMs < 0 ? 16.0 : now - _lastFrameMs;
+                _lastFrameMs = now;
+                if (frameDt > 0 && frameDt < 200)
+                    _x += (float)(Math.Max(0.5, w / 3.0) * frameDt / 1000.0);
                 if (_x > w) _x = -90;
 
                 _frames++;
